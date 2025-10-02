@@ -6,11 +6,16 @@ interface StatsCardProps {
   value: string | number;
   icon: LucideIcon;
   iconColor?: string;
+  onClick?: () => void;
 }
 
-export function StatsCard({ title, value, icon: Icon, iconColor = "text-primary" }: StatsCardProps) {
+export function StatsCard({ title, value, icon: Icon, iconColor = "text-primary", onClick }: StatsCardProps) {
   return (
-    <Card>
+    <Card
+      className={onClick ? "cursor-pointer hover-elevate" : ""}
+      onClick={onClick}
+      data-testid={`card-${title.toLowerCase().replace(/\s+/g, "-")}`}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
