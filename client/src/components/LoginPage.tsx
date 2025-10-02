@@ -53,13 +53,30 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           alt="Milk delivery truck"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-background/90" />
-        <div className="absolute bottom-8 left-8 right-8 text-white animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-4">
-            <Truck className="h-12 w-12" />
+        <div className="absolute inset-0 gradient-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/60 via-teal-500/50 to-primary/70 animate-gradient-shift" />
+        <div className="absolute bottom-12 left-12 right-12 text-white animate-fade-in-up">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-xl">
+              <Truck className="h-14 w-14" />
+            </div>
             <div>
-              <h1 className="text-5xl font-bold mb-2">SR Logistics</h1>
-              <p className="text-xl font-medium">Professional Fleet Management for Milk Transport</p>
+              <h1 className="text-6xl font-bold mb-3 tracking-tight">SR Logistics</h1>
+              <p className="text-2xl font-medium text-white/90">Professional Fleet Management for Milk Transport</p>
+            </div>
+          </div>
+          <div className="mt-8 grid grid-cols-3 gap-4">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+              <p className="text-3xl font-bold">500+</p>
+              <p className="text-sm text-white/80 mt-1">Deliveries Daily</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+              <p className="text-3xl font-bold">50+</p>
+              <p className="text-sm text-white/80 mt-1">Fleet Vehicles</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+              <p className="text-3xl font-bold">24/7</p>
+              <p className="text-sm text-white/80 mt-1">Live Tracking</p>
             </div>
           </div>
         </div>
@@ -77,12 +94,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             </div>
           </div>
 
-          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 animate-scale-in border-primary/20">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <Card className="shadow-xl hover:shadow-2xl transition-all duration-300 animate-scale-in border-2 border-primary/30 overflow-hidden">
+            <div className="absolute inset-0 gradient-card-blue opacity-50 pointer-events-none" />
+            <CardHeader className="space-y-2 relative">
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">Welcome Back</CardTitle>
               <CardDescription className="text-base">Sign in to manage your fleet operations</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
