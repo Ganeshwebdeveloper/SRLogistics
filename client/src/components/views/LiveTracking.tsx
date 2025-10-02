@@ -96,7 +96,7 @@ export function LiveTracking() {
 
       <MapView drivers={filteredLocations} />
 
-      <Card>
+      <Card className="hover-lift animate-fade-in">
         <CardHeader>
           <CardTitle>Active Trips</CardTitle>
         </CardHeader>

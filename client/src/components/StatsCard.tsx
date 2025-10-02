@@ -12,7 +12,7 @@ interface StatsCardProps {
 export function StatsCard({ title, value, icon: Icon, iconColor = "text-primary", onClick }: StatsCardProps) {
   return (
     <Card
-      className={`group transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary/50 hover:border-l-primary overflow-visible ${onClick ? "cursor-pointer hover:scale-[1.02]" : ""}`}
+      className={`group transition-all duration-300 hover:shadow-lg border-l-4 border-l-primary/50 hover:border-l-primary overflow-visible hover-lift animate-fade-in ${onClick ? "cursor-pointer" : ""}`}
       onClick={onClick}
       data-testid={`card-${title.toLowerCase().replace(/\s+/g, "-")}`}
     >

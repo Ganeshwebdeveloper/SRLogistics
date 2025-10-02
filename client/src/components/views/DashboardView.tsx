@@ -80,7 +80,7 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="hover-lift animate-fade-in">
           <CardHeader>
             <CardTitle>Available Drivers</CardTitle>
           </CardHeader>
@@ -116,7 +116,7 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-lift animate-fade-in">
           <CardHeader>
             <CardTitle>Available Vehicles</CardTitle>
           </CardHeader>
