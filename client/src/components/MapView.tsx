@@ -8,56 +8,93 @@ interface MapViewProps {
     name: string;
     position: [number, number];
     truckNumber: string;
+    color?: string;
   }>;
 }
 
 export function MapView({ drivers = [] }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current) return;
 
-    const map = L.map(mapContainerRef.current).setView([40.7128, -74.0060], 12);
-    
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
+    if (!mapRef.current) {
+      const map = L.map(mapContainerRef.current).setView([40.7128, -74.0060], 12);
+      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
 
-    mapRef.current = map;
+      mapRef.current = map;
+    }
+
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
 
     drivers.forEach((driver) => {
+      const color = driver.color || "#3b82f6";
       const customIcon = L.divIcon({
         className: 'custom-div-icon',
         html: `
-          <div class="flex flex-col items-center">
-            <div class="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold border-2 border-background shadow-lg">
+          <div class="flex flex-col items-center transition-all">
+            <div class="w-12 h-12 flex items-center justify-center font-bold text-white shadow-lg rounded-lg" 
+                 style="background-color: ${color}; border: 3px solid white;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path>
+                <path d="M15 18H9"></path>
+                <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path>
+                <circle cx="17" cy="18" r="2"></circle>
+                <circle cx="7" cy="18" r="2"></circle>
+              </svg>
+            </div>
+            <div class="mt-1 px-2 py-1 rounded text-xs font-semibold text-white shadow-md" 
+                 style="background-color: ${color};">
               ${driver.truckNumber}
             </div>
-            <div class="mt-1 bg-background/90 px-2 py-1 rounded text-xs font-medium border border-border">
+            <div class="mt-1 bg-white/95 px-2 py-1 rounded text-xs font-medium border shadow-sm">
               ${driver.name}
             </div>
           </div>
         `,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        iconSize: [60, 80],
+        iconAnchor: [30, 40],
       });
 
-      L.marker(driver.position, { icon: customIcon })
-        .addTo(map)
+      const marker = L.marker(driver.position, { icon: customIcon })
+        .addTo(mapRef.current!)
         .bindPopup(`
           <div class="p-2">
-            <strong>${driver.name}</strong><br/>
-            Truck: ${driver.truckNumber}
+            <div class="font-bold" style="color: ${color};">${driver.truckNumber}</div>
+            <div class="text-sm"><strong>${driver.name}</strong></div>
           </div>
         `);
+      
+      markersRef.current.push(marker);
     });
 
+    if (drivers.length > 0 && mapRef.current) {
+      const bounds = L.latLngBounds(drivers.map(d => d.position));
+      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+    }
+
     return () => {
-      map.remove();
-      mapRef.current = null;
+      if (drivers.length === 0) {
+        markersRef.current.forEach(marker => marker.remove());
+        markersRef.current = [];
+      }
     };
   }, [drivers]);
+
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <Card>
