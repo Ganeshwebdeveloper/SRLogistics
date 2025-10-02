@@ -451,6 +451,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const trip = await storage.createTrip(data);
+      
+      // After trip assignment, update driver and truck status to on_trip
+      await storage.updateTruck(trip.truckId, { status: "on_trip" });
+      await storage.updateUser(trip.driverId, { status: "on_trip" });
+      
       res.status(201).json(trip);
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : "Invalid data" });
