@@ -14,13 +14,13 @@ async function seed() {
     // Check and create admin user
     const hashedAdminPassword = await bcrypt.hash("admin123", 10);
     let admin = await db.query.users.findFirst({
-      where: eq(schema.users.email, "admin@delitruck.com")
+      where: eq(schema.users.email, "admin@srlogistics.com")
     });
     
     if (!admin) {
       [admin] = await db.insert(schema.users).values({
         name: "Admin User",
-        email: "admin@delitruck.com",
+        email: "admin@srlogistics.com",
         password: hashedAdminPassword,
         role: "admin",
         status: "active",
@@ -33,13 +33,13 @@ async function seed() {
     // Check and create driver users
     const hashedDriverPassword = await bcrypt.hash("driver123", 10);
     let driver1 = await db.query.users.findFirst({
-      where: eq(schema.users.email, "john@delitruck.com")
+      where: eq(schema.users.email, "john@srlogistics.com")
     });
     
     if (!driver1) {
       [driver1] = await db.insert(schema.users).values({
         name: "John Driver",
-        email: "john@delitruck.com",
+        email: "john@srlogistics.com",
         password: hashedDriverPassword,
         role: "driver",
         status: "active",
@@ -50,13 +50,13 @@ async function seed() {
     }
 
     let driver2 = await db.query.users.findFirst({
-      where: eq(schema.users.email, "sarah@delitruck.com")
+      where: eq(schema.users.email, "sarah@srlogistics.com")
     });
     
     if (!driver2) {
       [driver2] = await db.insert(schema.users).values({
         name: "Sarah Driver",
-        email: "sarah@delitruck.com",
+        email: "sarah@srlogistics.com",
         password: hashedDriverPassword,
         role: "driver",
         status: "active",
@@ -115,16 +115,16 @@ async function seed() {
     // Create sample message
     const [message1] = await db.insert(schema.messages).values({
       senderId: admin.id,
-      content: "Welcome to DeliTruck! Group chat is now active.",
+      content: "Welcome to SR Logistics! Group chat is now active.",
       type: "text",
     }).returning();
     console.log("✓ Created welcome message");
 
     console.log("\n✅ Database seeding completed successfully!");
     console.log("\nLogin credentials:");
-    console.log("Admin - Email: admin@delitruck.com, Password: admin123");
-    console.log("Driver 1 - Email: john@delitruck.com, Password: driver123");
-    console.log("Driver 2 - Email: sarah@delitruck.com, Password: driver123");
+    console.log("Admin - Email: admin@srlogistics.com, Password: admin123");
+    console.log("Driver 1 - Email: john@srlogistics.com, Password: driver123");
+    console.log("Driver 2 - Email: sarah@srlogistics.com, Password: driver123");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
     process.exit(1);

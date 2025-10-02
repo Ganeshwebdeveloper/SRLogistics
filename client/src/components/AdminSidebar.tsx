@@ -32,7 +32,7 @@ export function AdminSidebar({ activeItem = "/admin", onItemClick }: AdminSideba
         <div className="flex items-center gap-2">
           <Truck className="h-6 w-6 text-primary" />
           <div>
-            <h2 className="text-lg font-semibold">DeliTruck</h2>
+            <h2 className="text-lg font-semibold">SR Logistics</h2>
             <p className="text-xs text-muted-foreground">Admin Panel</p>
           </div>
         </div>

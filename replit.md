@@ -1,8 +1,8 @@
-# DeliTruck Fleet Management System
+# SR Logistics Fleet Management System
 
 ## Overview
 
-DeliTruck is a milk transport fleet management web application designed for truck owners (admins) and drivers. The system enables real-time trip management, crate tracking, live GPS monitoring, and group chat communication between admins and drivers.
+SR Logistics is a milk transport fleet management web application designed for truck owners (admins) and drivers. The system enables real-time trip management, crate tracking, live GPS monitoring, and group chat communication between admins and drivers.
 
 The application provides two distinct user interfaces:
 - **Admin Dashboard**: Comprehensive fleet oversight with trip assignment, live tracking maps, statistics, and driver management
@@ -122,9 +122,9 @@ Preferred communication style: Simple, everyday language.
 - Messages: `/api/messages`, `/api/messages/:id` (with DELETE support)
 
 **Seed Data**:
-- Admin: admin@delitruck.com (password: admin123)
-- Driver 1: john@delitruck.com (password: driver123)
-- Driver 2: sarah@delitruck.com (password: driver123)
+- Admin: admin@srlogistics.com (password: admin123)
+- Driver 1: john@srlogistics.com (password: driver123)
+- Driver 2: sarah@srlogistics.com (password: driver123)
 - 2 trucks (TRK-001, TRK-002)
 - 1 route (City Center Route)
 - 1 ongoing trip with crates

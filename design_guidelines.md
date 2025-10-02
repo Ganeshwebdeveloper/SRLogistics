@@ -1,4 +1,4 @@
-# DeliTruck Fleet Management - Design Guidelines
+# SR Logistics Fleet Management - Design Guidelines
 
 ## Design Approach
 **Selected System**: Material Design 3 with custom adaptations for fleet management  

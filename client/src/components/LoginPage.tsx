@@ -55,7 +55,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-background/20" />
         <div className="absolute bottom-8 left-8 right-8 text-primary-foreground">
-          <h1 className="text-4xl font-bold mb-2">DeliTruck</h1>
+          <h1 className="text-4xl font-bold mb-2">SR Logistics</h1>
           <p className="text-lg opacity-90">Professional Fleet Management for Milk Transport</p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         <div className="w-full max-w-md space-y-6">
           <div className="flex items-center gap-3 lg:hidden mb-8">
             <Truck className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">DeliTruck</h1>
+            <h1 className="text-2xl font-bold">SR Logistics</h1>
           </div>
 
           <Card>
@@ -114,8 +114,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               
               <div className="mt-4 p-3 bg-muted rounded-md">
                 <p className="text-xs text-muted-foreground mb-2">Demo Credentials:</p>
-                <p className="text-xs">Admin: admin@delitruck.com / admin123</p>
-                <p className="text-xs">Driver: john@delitruck.com / driver123</p>
+                <p className="text-xs">Admin: admin@srlogistics.com / admin123</p>
+                <p className="text-xs">Driver: john@srlogistics.com / driver123</p>
               </div>
             </CardContent>
           </Card>
