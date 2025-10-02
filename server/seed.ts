@@ -83,6 +83,8 @@ async function seed() {
 
     // Create route
     const [route1] = await db.insert(schema.routes).values({
+      origin: "Main Warehouse",
+      destination: "City Center",
       routeName: "City Center Route",
       notes: "Main delivery route covering downtown area",
     }).returning();
@@ -93,7 +95,7 @@ async function seed() {
       truckId: truck1.id,
       driverId: driver1.id,
       routeId: route1.id,
-      salary: "1500.00",
+      rupees: "1500.00",
       startTime: new Date(),
       currentLocation: "Starting Point",
       status: "ongoing",
@@ -105,13 +107,17 @@ async function seed() {
       .set({ status: "busy" })
       .where(eq(schema.trucks.id, truck1.id));
 
-    // Create crates for the trip
+    // Create crates for the route (attendance tracking)
     const [crate1] = await db.insert(schema.crates).values({
-      tripId: trip1.id,
+      routeId: route1.id,
+      driverId: driver1.id,
+      vehicleId: truck1.id,
+      date: new Date(),
       initialCount: 100,
       remainingCount: 100,
+      remarks: "First day delivery",
     }).returning();
-    console.log("✓ Created crate record for trip");
+    console.log("✓ Created crate attendance record for route");
 
     // Create sample message
     const [message1] = await db.insert(schema.messages).values({
