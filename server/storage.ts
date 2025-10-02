@@ -31,6 +31,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   getDrivers(): Promise<User[]>;
   
@@ -39,6 +40,7 @@ export interface IStorage {
   getTruckByNumber(truckNumber: string): Promise<Truck | undefined>;
   createTruck(truck: InsertTruck): Promise<Truck>;
   updateTruck(id: string, truck: Partial<Truck>): Promise<Truck | undefined>;
+  deleteTruck(id: string): Promise<boolean>;
   getAllTrucks(): Promise<Truck[]>;
   getAvailableTrucks(): Promise<Truck[]>;
   
@@ -52,6 +54,7 @@ export interface IStorage {
   getTrip(id: string): Promise<Trip | undefined>;
   createTrip(trip: InsertTrip): Promise<Trip>;
   updateTrip(id: string, trip: Partial<Trip>): Promise<Trip | undefined>;
+  deleteTrip(id: string): Promise<boolean>;
   getAllTrips(): Promise<Trip[]>;
   getTripsByDriver(driverId: string): Promise<Trip[]>;
   getOngoingTrips(): Promise<Trip[]>;
