@@ -60,7 +60,7 @@ export const trips = pgTable("trips", {
   distanceTravelled: decimal("distance_travelled", { precision: 10, scale: 2 }).default("0"),
   avgSpeed: decimal("avg_speed", { precision: 10, scale: 2 }).default("0"),
   currentLocation: text("current_location"),
-  status: text("status").notNull().default("ongoing"), // 'ongoing' or 'completed'
+  status: text("status").notNull().default("scheduled"), // 'scheduled', 'ongoing', or 'completed'
 });
 
 export const insertTripSchema = createInsertSchema(trips).omit({

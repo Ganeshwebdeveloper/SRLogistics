@@ -2,9 +2,9 @@ import { DriverDashboard } from "@/components/DriverDashboard";
 import { CrateCounter } from "@/components/CrateCounter";
 import { ChatInterface } from "@/components/ChatInterface";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Truck } from "lucide-react";
+import { Truck as TruckIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { User, Trip } from "@shared/schema";
+import type { User, Trip, Truck, Route } from "@shared/schema";
 
 interface DriverPageProps {
   user: User;
@@ -17,15 +17,15 @@ export default function DriverPage({ user, onLogout }: DriverPageProps) {
   });
 
   const currentTrip = trips?.find(
-    (trip) => trip.status === "in-progress" || trip.status === "scheduled"
+    (trip) => trip.status === "ongoing" || trip.status === "scheduled"
   );
 
-  const { data: truck } = useQuery({
+  const { data: truck } = useQuery<Truck>({
     queryKey: ["/api/trucks", currentTrip?.truckId],
     enabled: !!currentTrip?.truckId,
   });
 
-  const { data: route } = useQuery({
+  const { data: route } = useQuery<Route>({
     queryKey: ["/api/routes", currentTrip?.routeId],
     enabled: !!currentTrip?.routeId,
   });
@@ -43,7 +43,7 @@ export default function DriverPage({ user, onLogout }: DriverPageProps) {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Truck className="h-6 w-6 text-primary" />
+            <TruckIcon className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-semibold">DeliTruck Driver</h1>
           </div>
           <ThemeToggle />
@@ -58,9 +58,9 @@ export default function DriverPage({ user, onLogout }: DriverPageProps) {
               assignedTrip={
                 currentTrip
                   ? {
-                      truckNumber: truck?.registrationNumber || "Unknown",
-                      route: route?.name || "Unknown Route",
-                      status: currentTrip.status === "scheduled" ? "not-started" : "in-progress",
+                      truckNumber: truck?.truckNumber || "Unknown",
+                      route: route?.routeName || "Unknown Route",
+                      status: currentTrip.status === "scheduled" ? "not-started" : "ongoing",
                     }
                   : undefined
               }
