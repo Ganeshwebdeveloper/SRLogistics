@@ -103,3 +103,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+
+export type MessageWithSender = Message & {
+  senderName: string;
+};

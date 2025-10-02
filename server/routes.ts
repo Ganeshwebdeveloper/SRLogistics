@@ -11,17 +11,63 @@ import "./types";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
+  const parseCookies = (cookieHeader: string | undefined): Record<string, string> => {
+    const cookies: Record<string, string> = {};
+    if (!cookieHeader) return cookies;
+    
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.trim().split('=');
+      if (parts.length === 2) {
+        cookies[parts[0]] = decodeURIComponent(parts[1]);
+      }
+    });
+    return cookies;
+  };
+
+  const getSessionFromRequest = (req: any): Promise<any> => {
+    return new Promise((resolve) => {
+      const sessionStore = app.get("sessionStore");
+      if (!sessionStore) {
+        console.error("Session store not available");
+        return resolve(null);
+      }
+
+      const cookies = parseCookies(req.headers.cookie);
+      const sessionCookieName = 'connect.sid';
+      const sessionId = cookies[sessionCookieName];
+      
+      if (!sessionId) {
+        return resolve(null);
+      }
+
+      const sessionIdWithoutSig = sessionId.split('.')[0].replace('s:', '');
+      
+      sessionStore.get(sessionIdWithoutSig, (err: any, session: any) => {
+        if (err || !session) {
+          resolve(null);
+        } else {
+          resolve(session);
+        }
+      });
+    });
+  };
+  
   // WebSocket setup for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
   const clients = new Map<string, WebSocket>();
 
-  wss.on("connection", (ws, req) => {
-    const userId = new URL(req.url!, `http://${req.headers.host}`).searchParams.get("userId");
+  wss.on("connection", async (ws, req) => {
+    const session = await getSessionFromRequest(req);
     
-    if (userId) {
-      clients.set(userId, ws);
-      console.log(`User ${userId} connected to WebSocket`);
+    if (!session || !session.userId) {
+      console.log("WebSocket connection rejected: No valid session");
+      ws.close(1008, "Unauthorized");
+      return;
     }
+
+    const userId = session.userId;
+    clients.set(userId, ws);
+    console.log(`User ${userId} connected to WebSocket`);
 
     ws.on("message", async (data) => {
       try {
@@ -29,13 +75,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (message.type === "chat") {
           const newMessage = await storage.createMessage({
-            senderId: message.senderId,
+            senderId: userId,
             content: message.content,
             type: message.messageType || "text",
           });
 
+          const sender = await storage.getUser(userId);
+          const messageWithSender = {
+            ...newMessage,
+            senderName: sender?.name || "Unknown",
+          };
+
           // Broadcast to all connected clients
-          const broadcastData = JSON.stringify(newMessage);
+          const broadcastData = JSON.stringify(messageWithSender);
           clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
               client.send(broadcastData);
@@ -48,10 +100,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     ws.on("close", () => {
-      if (userId) {
-        clients.delete(userId);
-        console.log(`User ${userId} disconnected from WebSocket`);
-      }
+      clients.delete(userId);
+      console.log(`User ${userId} disconnected from WebSocket`);
     });
   });
 

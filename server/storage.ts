@@ -15,6 +15,7 @@ import type {
   InsertCrate,
   Message,
   InsertMessage,
+  MessageWithSender,
 } from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -64,7 +65,7 @@ export interface IStorage {
   // Message operations
   getMessage(id: string): Promise<Message | undefined>;
   createMessage(message: InsertMessage): Promise<Message>;
-  getAllMessages(): Promise<Message[]>;
+  getAllMessages(): Promise<MessageWithSender[]>;
   deleteMessage(id: string): Promise<boolean>;
 }
 
@@ -207,8 +208,21 @@ export class DbStorage implements IStorage {
     return result[0];
   }
 
-  async getAllMessages(): Promise<Message[]> {
-    return await db.select().from(schema.messages).orderBy(schema.messages.createdAt);
+  async getAllMessages(): Promise<MessageWithSender[]> {
+    const messages = await db
+      .select({
+        id: schema.messages.id,
+        senderId: schema.messages.senderId,
+        senderName: schema.users.name,
+        content: schema.messages.content,
+        type: schema.messages.type,
+        createdAt: schema.messages.createdAt,
+      })
+      .from(schema.messages)
+      .leftJoin(schema.users, eq(schema.messages.senderId, schema.users.id))
+      .orderBy(schema.messages.createdAt);
+    
+    return messages as MessageWithSender[];
   }
 
   async deleteMessage(id: string): Promise<boolean> {

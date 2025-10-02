@@ -10,14 +10,16 @@ app.use(express.urlencoded({ extended: false }));
 
 // Session setup
 const MemoryStore = memorystore(session);
+const sessionStore = new MemoryStore({
+  checkPeriod: 86400000, // prune expired entries every 24h
+});
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "delitruck-secret-key-change-in-production",
     resave: false,
     saveUninitialized: false,
-    store: new MemoryStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
-    }),
+    store: sessionStore,
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       httpOnly: true,
@@ -26,6 +28,8 @@ app.use(
     },
   })
 );
+
+app.set("sessionStore", sessionStore);
 
 app.use((req, res, next) => {
   const start = Date.now();
