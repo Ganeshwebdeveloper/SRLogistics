@@ -1,0 +1,110 @@
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { eq } from "drizzle-orm";
+import * as schema from "@shared/schema";
+import bcrypt from "bcrypt";
+
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql, { schema });
+
+async function seed() {
+  try {
+    console.log("Starting database seeding...");
+
+    // Create admin user
+    const hashedAdminPassword = await bcrypt.hash("admin123", 10);
+    const [admin] = await db.insert(schema.users).values({
+      name: "Admin User",
+      email: "admin@delitruck.com",
+      password: hashedAdminPassword,
+      role: "admin",
+      status: "active",
+    }).returning();
+    console.log("✓ Created admin user:", admin.email);
+
+    // Create driver users
+    const hashedDriverPassword = await bcrypt.hash("driver123", 10);
+    const [driver1] = await db.insert(schema.users).values({
+      name: "John Driver",
+      email: "john@delitruck.com",
+      password: hashedDriverPassword,
+      role: "driver",
+      status: "active",
+    }).returning();
+    console.log("✓ Created driver:", driver1.email);
+
+    const [driver2] = await db.insert(schema.users).values({
+      name: "Sarah Driver",
+      email: "sarah@delitruck.com",
+      password: hashedDriverPassword,
+      role: "driver",
+      status: "active",
+    }).returning();
+    console.log("✓ Created driver:", driver2.email);
+
+    // Create trucks
+    const [truck1] = await db.insert(schema.trucks).values({
+      truckNumber: "TRK-001",
+      capacity: 500,
+      status: "available",
+    }).returning();
+    console.log("✓ Created truck:", truck1.truckNumber);
+
+    const [truck2] = await db.insert(schema.trucks).values({
+      truckNumber: "TRK-002",
+      capacity: 600,
+      status: "available",
+    }).returning();
+    console.log("✓ Created truck:", truck2.truckNumber);
+
+    // Create route
+    const [route1] = await db.insert(schema.routes).values({
+      routeName: "City Center Route",
+      notes: "Main delivery route covering downtown area",
+    }).returning();
+    console.log("✓ Created route:", route1.routeName);
+
+    // Create a sample trip
+    const [trip1] = await db.insert(schema.trips).values({
+      truckId: truck1.id,
+      driverId: driver1.id,
+      routeId: route1.id,
+      startTime: new Date(),
+      currentLocation: "Starting Point",
+      status: "ongoing",
+    }).returning();
+    console.log("✓ Created trip for driver:", driver1.name);
+
+    // Update truck status to busy
+    await db.update(schema.trucks)
+      .set({ status: "busy" })
+      .where(eq(schema.trucks.id, truck1.id));
+
+    // Create crates for the trip
+    const [crate1] = await db.insert(schema.crates).values({
+      tripId: trip1.id,
+      initialCount: 100,
+      remainingCount: 100,
+    }).returning();
+    console.log("✓ Created crate record for trip");
+
+    // Create sample message
+    const [message1] = await db.insert(schema.messages).values({
+      senderId: admin.id,
+      content: "Welcome to DeliTruck! Group chat is now active.",
+      type: "text",
+    }).returning();
+    console.log("✓ Created welcome message");
+
+    console.log("\n✅ Database seeding completed successfully!");
+    console.log("\nLogin credentials:");
+    console.log("Admin - Email: admin@delitruck.com, Password: admin123");
+    console.log("Driver 1 - Email: john@delitruck.com, Password: driver123");
+    console.log("Driver 2 - Email: sarah@delitruck.com, Password: driver123");
+  } catch (error) {
+    console.error("❌ Seeding failed:", error);
+    process.exit(1);
+  }
+}
+
+seed();
