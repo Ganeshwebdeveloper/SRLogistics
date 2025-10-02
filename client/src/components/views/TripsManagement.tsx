@@ -229,7 +229,7 @@ export function TripsManagement() {
                     <TableHead>Start Time</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Distance</TableHead>
-                    <TableHead>Salary</TableHead>
+                    <TableHead>Payment (₹)</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -248,7 +248,7 @@ export function TripsManagement() {
                       </TableCell>
                       <TableCell>{getStatusBadge(trip.status)}</TableCell>
                       <TableCell>{trip.distanceTravelled || "0"} km</TableCell>
-                      <TableCell>${trip.salary}</TableCell>
+                      <TableCell>₹{trip.rupees}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           {trip.status === "scheduled" && (

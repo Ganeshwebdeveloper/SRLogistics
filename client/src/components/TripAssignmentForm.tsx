@@ -19,7 +19,7 @@ export function TripAssignmentForm() {
   const [truckId, setTruckId] = useState("");
   const [driverId, setDriverId] = useState("");
   const [routeId, setRouteId] = useState("");
-  const [salary, setSalary] = useState("");
+  const [rupees, setRupees] = useState("");
   const { toast } = useToast();
 
   const { data: trucks = [] } = useQuery<Truck[]>({
@@ -37,12 +37,12 @@ export function TripAssignmentForm() {
   });
 
   const createTripMutation = useMutation({
-    mutationFn: async (data: { truckId: string; driverId: string; routeId: string; salary: string }) => {
+    mutationFn: async (data: { truckId: string; driverId: string; routeId: string; rupees: string }) => {
       const tripResponse = await apiRequest("POST", "/api/trips", {
         truckId: data.truckId,
         driverId: data.driverId,
         routeId: data.routeId,
-        salary: data.salary,
+        rupees: data.rupees,
         currentLocation: "Starting Point",
         status: "scheduled",
       });
@@ -59,7 +59,7 @@ export function TripAssignmentForm() {
       setTruckId("");
       setDriverId("");
       setRouteId("");
-      setSalary("");
+      setRupees("");
     },
     onError: (error: Error) => {
       toast({
@@ -76,7 +76,7 @@ export function TripAssignmentForm() {
       truckId,
       driverId,
       routeId,
-      salary,
+      rupees,
     });
   };
 
@@ -149,16 +149,16 @@ export function TripAssignmentForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="salary">Driver Salary</Label>
+            <Label htmlFor="rupees">Driver Payment (₹)</Label>
             <Input
-              id="salary"
+              id="rupees"
               type="number"
               min="0"
               step="0.01"
-              value={salary}
-              onChange={(e) => setSalary(e.target.value)}
-              placeholder="Enter salary amount"
-              data-testid="input-salary"
+              value={rupees}
+              onChange={(e) => setRupees(e.target.value)}
+              placeholder="Enter amount in rupees"
+              data-testid="input-rupees"
               required
               disabled={createTripMutation.isPending}
             />
@@ -168,7 +168,7 @@ export function TripAssignmentForm() {
             type="submit" 
             className="w-full" 
             data-testid="button-assign-trip"
-            disabled={createTripMutation.isPending || !truckId || !driverId || !routeId || !salary}
+            disabled={createTripMutation.isPending || !truckId || !driverId || !routeId || !rupees}
           >
             {createTripMutation.isPending ? "Assigning..." : "Assign Trip"}
           </Button>
