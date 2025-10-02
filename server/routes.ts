@@ -434,18 +434,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = insertTripSchema.parse(req.body);
       
-      // Get route to retrieve crate count
-      const route = await storage.getRoute(data.routeId);
-      if (!route) {
-        return res.status(404).json({ message: "Route not found" });
-      }
-      
-      // Verify driver and truck are available
+      // Verify driver, truck, and route exist
       const driver = await storage.getUser(data.driverId);
       const truck = await storage.getTruck(data.truckId);
+      const route = await storage.getRoute(data.routeId);
       
-      if (!driver || !truck) {
-        return res.status(404).json({ message: "Driver or truck not found" });
+      if (!driver || !truck || !route) {
+        return res.status(404).json({ message: "Driver, truck, or route not found" });
       }
       
       if (driver.status !== "available") {
@@ -456,14 +451,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const trip = await storage.createTrip(data);
-      
-      // Automatically create crate record based on route's crate count
-      await storage.createCrate({
-        tripId: trip.id,
-        initialCount: route.crateCount,
-        remainingCount: route.crateCount,
-      });
-      
       res.status(201).json(trip);
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : "Invalid data" });
@@ -494,16 +481,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Crate endpoints
-  app.get("/api/crates/trip/:tripId", requireAuth, async (req, res) => {
+  // Crate endpoints (attendance tracking)
+  app.get("/api/crates", requireAuth, async (req, res) => {
     try {
-      const crate = await storage.getCrateByTrip(req.params.tripId);
-      if (!crate) {
-        return res.status(404).json({ message: "Crate not found" });
-      }
-      res.json(crate);
+      const crates = await storage.getAllCrates();
+      res.json(crates);
     } catch (error) {
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch crate" });
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch crates" });
+    }
+  });
+
+  app.get("/api/crates/route/:routeId", requireAuth, async (req, res) => {
+    try {
+      const crates = await storage.getCratesByRoute(req.params.routeId);
+      res.json(crates);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch crates" });
+    }
+  });
+
+  app.get("/api/crates/driver/:driverId", requireAuth, async (req, res) => {
+    try {
+      const crates = await storage.getCratesByDriver(req.params.driverId);
+      res.json(crates);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch driver crates" });
     }
   });
 

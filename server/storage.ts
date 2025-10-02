@@ -60,9 +60,11 @@ export interface IStorage {
   getTripsByDriver(driverId: string): Promise<Trip[]>;
   getOngoingTrips(): Promise<Trip[]>;
   
-  // Crate operations
+  // Crate operations (attendance tracking)
   getCrate(id: string): Promise<Crate | undefined>;
-  getCrateByTrip(tripId: string): Promise<Crate | undefined>;
+  getCratesByRoute(routeId: string): Promise<Crate[]>;
+  getCratesByDriver(driverId: string): Promise<Crate[]>;
+  getAllCrates(): Promise<Crate[]>;
   createCrate(crate: InsertCrate): Promise<Crate>;
   updateCrate(id: string, crate: Partial<Crate>): Promise<Crate | undefined>;
   
@@ -200,15 +202,22 @@ export class DbStorage implements IStorage {
     return result.length > 0;
   }
 
-  // Crate operations
+  // Crate operations (attendance tracking)
   async getCrate(id: string): Promise<Crate | undefined> {
     const result = await db.select().from(schema.crates).where(eq(schema.crates.id, id));
     return result[0];
   }
 
-  async getCrateByTrip(tripId: string): Promise<Crate | undefined> {
-    const result = await db.select().from(schema.crates).where(eq(schema.crates.tripId, tripId));
-    return result[0];
+  async getCratesByRoute(routeId: string): Promise<Crate[]> {
+    return await db.select().from(schema.crates).where(eq(schema.crates.routeId, routeId));
+  }
+
+  async getCratesByDriver(driverId: string): Promise<Crate[]> {
+    return await db.select().from(schema.crates).where(eq(schema.crates.driverId, driverId));
+  }
+
+  async getAllCrates(): Promise<Crate[]> {
+    return await db.select().from(schema.crates);
   }
 
   async createCrate(crate: InsertCrate): Promise<Crate> {
