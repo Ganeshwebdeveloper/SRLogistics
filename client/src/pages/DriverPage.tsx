@@ -33,24 +33,27 @@ export default function DriverPage({ user, onLogout }: DriverPageProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-center animate-fade-in">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="gradient-header border-b shadow-md">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between animate-slide-in-right">
           <div className="flex items-center gap-3">
-            <TruckIcon className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold">SR Logistics Driver</h1>
+            <TruckIcon className="h-7 w-7 text-white" />
+            <h1 className="text-xl font-bold text-white">SR Logistics Driver</h1>
           </div>
           <ThemeToggle />
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-6xl">
+      <main className="container mx-auto px-4 py-6 max-w-6xl animate-fade-in">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <DriverDashboard 
