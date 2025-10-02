@@ -64,6 +64,8 @@ export default function DriverPage({ user, onLogout }: DriverPageProps) {
                     }
                   : undefined
               }
+              tripId={currentTrip?.id}
+              driverId={user.id}
             />
             <ChatInterface currentUserId={user.id} currentUserName={user.name} />
           </div>

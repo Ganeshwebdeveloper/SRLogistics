@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Square, MapPin, Clock, Gauge } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DriverDashboardProps {
   driverName?: string;
@@ -11,6 +14,8 @@ interface DriverDashboardProps {
     route: string;
     status: "ongoing" | "not-started";
   };
+  tripId?: string;
+  driverId?: string;
 }
 
 export function DriverDashboard({ 
@@ -19,7 +24,9 @@ export function DriverDashboard({
     truckNumber: "TRK-001",
     route: "North District Route",
     status: "not-started",
-  }
+  },
+  tripId,
+  driverId
 }: DriverDashboardProps) {
   const [tripStatus, setTripStatus] = useState<"ongoing" | "not-started" | "completed">(
     assignedTrip.status
@@ -27,23 +34,88 @@ export function DriverDashboard({
   const [distance, setDistance] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [duration, setDuration] = useState(0);
+  const { toast } = useToast();
+
+  const startTripMutation = useMutation({
+    mutationFn: async () => {
+      if (!tripId) throw new Error("No trip ID provided");
+      const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
+        status: "ongoing",
+        startTime: new Date().toISOString(),
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setTripStatus("ongoing");
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+      if (driverId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/trips/driver", driverId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({
+        title: "Trip started",
+        description: "Your trip is now in progress",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to start trip",
+        description: error.message,
+      });
+    },
+  });
+
+  const endTripMutation = useMutation({
+    mutationFn: async () => {
+      if (!tripId) throw new Error("No trip ID provided");
+      const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
+        status: "completed",
+        endTime: new Date().toISOString(),
+        distanceTravelled: distance.toFixed(2),
+        avgSpeed: speed.toFixed(2),
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setTripStatus("completed");
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+      if (driverId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/trips/driver", driverId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({
+        title: "Trip completed",
+        description: "Great job! Your trip has been completed.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to end trip",
+        description: error.message,
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (tripStatus === "ongoing") {
+      const interval = setInterval(() => {
+        setDistance((prev) => prev + Math.random() * 2);
+        setSpeed(Math.random() * 60 + 40);
+        setDuration((prev) => prev + 1);
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [tripStatus]);
 
   const startTrip = () => {
-    setTripStatus("ongoing");
-    console.log("Trip started");
-    
-    const interval = setInterval(() => {
-      setDistance((prev) => prev + Math.random() * 2);
-      setSpeed(Math.random() * 60 + 40);
-      setDuration((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
+    startTripMutation.mutate();
   };
 
   const endTrip = () => {
-    setTripStatus("completed");
-    console.log("Trip ended");
+    endTripMutation.mutate();
   };
 
   return (
