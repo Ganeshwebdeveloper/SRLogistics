@@ -93,6 +93,7 @@ async function seed() {
       truckId: truck1.id,
       driverId: driver1.id,
       routeId: route1.id,
+      salary: "1500.00",
       startTime: new Date(),
       currentLocation: "Starting Point",
       status: "ongoing",

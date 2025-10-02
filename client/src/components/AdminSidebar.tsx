@@ -9,23 +9,23 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { Truck, LayoutDashboard, MapPin, Package, MessageSquare, Settings } from "lucide-react";
+import { Truck, LayoutDashboard, MapPin, Package, MessageSquare, List } from "lucide-react";
 
 const menuItems = [
-  { title: "Dashboard", icon: LayoutDashboard, url: "/admin" },
-  { title: "Fleet Management", icon: Truck, url: "/admin/fleet" },
-  { title: "Live Tracking", icon: MapPin, url: "/admin/tracking" },
-  { title: "Crates", icon: Package, url: "/admin/crates" },
-  { title: "Group Chat", icon: MessageSquare, url: "/admin/chat" },
-  { title: "Settings", icon: Settings, url: "/admin/settings" },
+  { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
+  { title: "Trips", icon: List, id: "trips" },
+  { title: "Fleet Management", icon: Truck, id: "fleet" },
+  { title: "Live Tracking", icon: MapPin, id: "tracking" },
+  { title: "Crates", icon: Package, id: "crates" },
+  { title: "Group Chat", icon: MessageSquare, id: "chat" },
 ];
 
 interface AdminSidebarProps {
   activeItem?: string;
-  onItemClick?: (url: string) => void;
+  onItemClick?: (id: string) => void;
 }
 
-export function AdminSidebar({ activeItem = "/admin", onItemClick }: AdminSidebarProps) {
+export function AdminSidebar({ activeItem = "dashboard", onItemClick }: AdminSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader className="p-4 border-b border-sidebar-border">
@@ -45,14 +45,12 @@ export function AdminSidebar({ activeItem = "/admin", onItemClick }: AdminSideba
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    asChild
-                    isActive={activeItem === item.url}
-                    onClick={() => onItemClick?.(item.url)}
+                    isActive={activeItem === item.id}
+                    onClick={() => onItemClick?.(item.id)}
+                    data-testid={`link-${item.title.toLowerCase().replace(/ /g, '-')}`}
                   >
-                    <a href={item.url} data-testid={`link-${item.title.toLowerCase().replace(' ', '-')}`}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </a>
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
