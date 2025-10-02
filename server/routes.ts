@@ -133,7 +133,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/users/:id", async (req, res) => {
     try {
-      const user = await storage.updateUser(req.params.id, req.body);
+      // Create update schema that excludes password and validates allowed fields
+      const updateUserSchema = z.object({
+        name: z.string().optional(),
+        email: z.string().email().optional(),
+        role: z.enum(["admin", "driver"]).optional(),
+        status: z.enum(["active", "inactive"]).optional(),
+      });
+      
+      const validatedData = updateUserSchema.parse(req.body);
+      const user = await storage.updateUser(req.params.id, validatedData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -141,6 +150,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update user" });
+    }
+  });
+
+  // Separate endpoint for password change with proper hashing
+  app.patch("/api/users/:id/password", async (req, res) => {
+    try {
+      const passwordSchema = z.object({
+        newPassword: z.string().min(6),
+      });
+      
+      const { newPassword } = passwordSchema.parse(req.body);
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      const user = await storage.updateUser(req.params.id, { password: hashedPassword });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update password" });
     }
   });
 
