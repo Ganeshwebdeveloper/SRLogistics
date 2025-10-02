@@ -141,10 +141,10 @@ export function TripsManagement() {
     routes.find((r) => r.id === routeId)?.routeName || "Unknown";
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "outline"> = {
-      scheduled: "secondary",
-      ongoing: "default",
-      completed: "outline",
+    const variants: Record<string, "scheduled" | "ongoing" | "completed" | "outline"> = {
+      scheduled: "scheduled",
+      ongoing: "ongoing",
+      completed: "completed",
     };
     return (
       <Badge variant={variants[status] || "outline"} data-testid={`badge-status-${status}`}>

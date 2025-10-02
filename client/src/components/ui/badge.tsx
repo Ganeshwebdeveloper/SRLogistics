@@ -15,8 +15,19 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow-xs",
-
         outline: " border [border-color:var(--badge-outline)] shadow-xs",
+        success:
+          "border-transparent gradient-success text-white shadow-md",
+        warning:
+          "border-transparent gradient-warning text-white shadow-md",
+        info:
+          "border-transparent gradient-info text-white shadow-md",
+        ongoing:
+          "border-transparent gradient-warning text-white shadow-md animate-pulse-slow",
+        completed:
+          "border-transparent gradient-success text-white shadow-md",
+        scheduled:
+          "border-transparent gradient-info text-white shadow-md",
       },
     },
     defaultVariants: {
