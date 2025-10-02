@@ -101,6 +101,24 @@ Preferred communication style: Simple, everyday language.
 - Native WebSocket (ws) for chat and tracking - no Socket.io dependency
 - Client-side WebSocket connection managed in React components
 
+**Real-time GPS Tracking**:
+- Live GPS location updates delivered via WebSocket with `location_update` message type
+- LiveTracking component (`client/src/components/views/LiveTracking.tsx`) establishes WebSocket connection on mount
+- GPS locations stored in component state as Map<tripId, {latitude, longitude, timestamp}>
+- MapView component (`client/src/components/MapView.tsx`) efficiently updates marker positions without recreating entire map
+- Markers are tracked by driver ID and only updated when positions change
+- Falls back to default location (New York City: 40.7128, -74.0060) if GPS data not yet available for a trip
+- WebSocket message format for location updates:
+  ```json
+  {
+    "type": "location_update",
+    "tripId": "uuid",
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "timestamp": "2025-10-02T18:57:00Z"
+  }
+  ```
+
 **Development Tools**:
 - Vite plugins: React, runtime error overlay, Replit-specific tooling
 - TypeScript for type safety across frontend and backend

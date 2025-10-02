@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MapView } from "@/components/MapView";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,8 +25,17 @@ const TRUCK_COLORS = [
   "#f97316", // orange
 ];
 
+interface GpsLocation {
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+}
+
+const DEFAULT_LOCATION: [number, number] = [40.7128, -74.0060]; // New York City
+
 export function LiveTracking() {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [gpsLocations, setGpsLocations] = useState<Map<string, GpsLocation>>(new Map());
 
   const { data: trips = [] } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
@@ -44,6 +53,47 @@ export function LiveTracking() {
     queryKey: ["/api/routes"],
   });
 
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established for GPS tracking");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === "location_update") {
+          setGpsLocations((prev) => {
+            const updated = new Map(prev);
+            updated.set(message.tripId, {
+              latitude: message.latitude,
+              longitude: message.longitude,
+              timestamp: message.timestamp,
+            });
+            return updated;
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed for GPS tracking");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
   const ongoingTrips = trips.filter((trip) => trip.status === "ongoing");
 
   const getColorForTruck = (truckNumber: string) => {
@@ -55,13 +105,16 @@ export function LiveTracking() {
     const driver = drivers.find((d) => d.id === trip.driverId);
     const truck = trucks.find((t) => t.id === trip.truckId);
     const truckNumber = truck?.truckNumber || "Unknown";
+    const gpsLocation = gpsLocations.get(trip.id);
+    
+    const position: [number, number] = gpsLocation 
+      ? [gpsLocation.latitude, gpsLocation.longitude]
+      : DEFAULT_LOCATION;
+    
     return {
       id: trip.id,
       name: driver?.name || "Unknown Driver",
-      position: [40.7128 + Math.random() * 0.1, -74.006 + Math.random() * 0.1] as [
-        number,
-        number
-      ],
+      position,
       truckNumber,
       color: getColorForTruck(truckNumber),
     };

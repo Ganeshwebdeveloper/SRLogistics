@@ -93,6 +93,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
               client.send(broadcastData);
             }
           });
+        } else if (message.type === "location_update") {
+          // Handle location updates from drivers
+          const { tripId, latitude, longitude, timestamp } = message;
+          
+          if (!tripId || latitude === undefined || longitude === undefined || !timestamp) {
+            console.error("Invalid location_update message: missing required fields", message);
+            return;
+          }
+
+          try {
+            // Fetch the trip to verify authorization
+            const trip = await storage.getTrip(tripId);
+
+            if (!trip) {
+              console.error(`Trip not found for location update: ${tripId}`);
+              ws.send(JSON.stringify({
+                type: "error",
+                message: "Trip not found"
+              }));
+              return;
+            }
+
+            // Verify that the user is the assigned driver for this trip
+            if (trip.driverId !== userId) {
+              console.warn(`Unauthorized location update attempt: User ${userId} tried to update trip ${tripId}`);
+              ws.send(JSON.stringify({
+                type: "error",
+                message: "Unauthorized: You are not the assigned driver for this trip"
+              }));
+              return;
+            }
+
+            // Create location data object
+            const locationData = {
+              latitude,
+              longitude,
+              timestamp,
+            };
+
+            // Update the trip's currentLocation field with JSON string
+            const updatedTrip = await storage.updateTrip(tripId, {
+              currentLocation: JSON.stringify(locationData),
+            });
+
+            if (!updatedTrip) {
+              console.error(`Failed to update trip location: ${tripId}`);
+              return;
+            }
+
+            console.log(`Location updated for trip ${tripId}:`, locationData);
+
+            // Broadcast location update to all connected clients
+            const broadcastMessage = {
+              type: "location_update",
+              tripId,
+              latitude,
+              longitude,
+              timestamp,
+            };
+
+            const broadcastData = JSON.stringify(broadcastMessage);
+            clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(broadcastData);
+              }
+            });
+          } catch (error) {
+            console.error("Error processing location update:", error);
+          }
         }
       } catch (error) {
         console.error("WebSocket message error:", error);

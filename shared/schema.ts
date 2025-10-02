@@ -65,6 +65,10 @@ export const trips = pgTable("trips", {
   distanceTravelled: decimal("distance_travelled", { precision: 10, scale: 2 }).default("0"),
   avgSpeed: decimal("avg_speed", { precision: 10, scale: 2 }).default("0"),
   currentLocation: text("current_location"),
+  startLatitude: decimal("start_latitude", { precision: 10, scale: 7 }),
+  startLongitude: decimal("start_longitude", { precision: 10, scale: 7 }),
+  endLatitude: decimal("end_latitude", { precision: 10, scale: 7 }),
+  endLongitude: decimal("end_longitude", { precision: 10, scale: 7 }),
   status: text("status").notNull().default("scheduled"), // 'scheduled', 'ongoing', or 'completed'
 });
 
