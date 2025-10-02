@@ -11,36 +11,60 @@ async function seed() {
   try {
     console.log("Starting database seeding...");
 
-    // Create admin user
+    // Check and create admin user
     const hashedAdminPassword = await bcrypt.hash("admin123", 10);
-    const [admin] = await db.insert(schema.users).values({
-      name: "Admin User",
-      email: "admin@delitruck.com",
-      password: hashedAdminPassword,
-      role: "admin",
-      status: "active",
-    }).returning();
-    console.log("✓ Created admin user:", admin.email);
+    let admin = await db.query.users.findFirst({
+      where: eq(schema.users.email, "admin@delitruck.com")
+    });
+    
+    if (!admin) {
+      [admin] = await db.insert(schema.users).values({
+        name: "Admin User",
+        email: "admin@delitruck.com",
+        password: hashedAdminPassword,
+        role: "admin",
+        status: "active",
+      }).returning();
+      console.log("✓ Created admin user:", admin.email);
+    } else {
+      console.log("✓ Admin user already exists:", admin.email);
+    }
 
-    // Create driver users
+    // Check and create driver users
     const hashedDriverPassword = await bcrypt.hash("driver123", 10);
-    const [driver1] = await db.insert(schema.users).values({
-      name: "John Driver",
-      email: "john@delitruck.com",
-      password: hashedDriverPassword,
-      role: "driver",
-      status: "active",
-    }).returning();
-    console.log("✓ Created driver:", driver1.email);
+    let driver1 = await db.query.users.findFirst({
+      where: eq(schema.users.email, "john@delitruck.com")
+    });
+    
+    if (!driver1) {
+      [driver1] = await db.insert(schema.users).values({
+        name: "John Driver",
+        email: "john@delitruck.com",
+        password: hashedDriverPassword,
+        role: "driver",
+        status: "active",
+      }).returning();
+      console.log("✓ Created driver:", driver1.email);
+    } else {
+      console.log("✓ Driver already exists:", driver1.email);
+    }
 
-    const [driver2] = await db.insert(schema.users).values({
-      name: "Sarah Driver",
-      email: "sarah@delitruck.com",
-      password: hashedDriverPassword,
-      role: "driver",
-      status: "active",
-    }).returning();
-    console.log("✓ Created driver:", driver2.email);
+    let driver2 = await db.query.users.findFirst({
+      where: eq(schema.users.email, "sarah@delitruck.com")
+    });
+    
+    if (!driver2) {
+      [driver2] = await db.insert(schema.users).values({
+        name: "Sarah Driver",
+        email: "sarah@delitruck.com",
+        password: hashedDriverPassword,
+        role: "driver",
+        status: "active",
+      }).returning();
+      console.log("✓ Created driver:", driver2.email);
+    } else {
+      console.log("✓ Driver already exists:", driver2.email);
+    }
 
     // Create trucks
     const [truck1] = await db.insert(schema.trucks).values({
