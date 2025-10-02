@@ -38,7 +38,9 @@ export type Truck = typeof trucks.$inferSelect;
 // Routes table
 export const routes = pgTable("routes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  routeName: text("route_name").notNull(),
+  origin: text("origin").notNull(),
+  destination: text("destination").notNull(),
+  routeName: text("route_name"),
   notes: text("notes"),
   crateCount: integer("crate_count").notNull().default(100),
 });

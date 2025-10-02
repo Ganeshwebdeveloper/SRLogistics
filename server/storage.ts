@@ -102,6 +102,11 @@ export class DbStorage implements IStorage {
     return await db.select().from(schema.users).where(eq(schema.users.role, "driver"));
   }
 
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(schema.users).where(eq(schema.users.id, id)).returning();
+    return result.length > 0;
+  }
+
   // Truck operations
   async getTruck(id: string): Promise<Truck | undefined> {
     const result = await db.select().from(schema.trucks).where(eq(schema.trucks.id, id));
@@ -129,6 +134,11 @@ export class DbStorage implements IStorage {
 
   async getAvailableTrucks(): Promise<Truck[]> {
     return await db.select().from(schema.trucks).where(eq(schema.trucks.status, "available"));
+  }
+
+  async deleteTruck(id: string): Promise<boolean> {
+    const result = await db.delete(schema.trucks).where(eq(schema.trucks.id, id)).returning();
+    return result.length > 0;
   }
 
   // Route operations
@@ -177,6 +187,11 @@ export class DbStorage implements IStorage {
 
   async getOngoingTrips(): Promise<Trip[]> {
     return await db.select().from(schema.trips).where(eq(schema.trips.status, "ongoing"));
+  }
+
+  async deleteTrip(id: string): Promise<boolean> {
+    const result = await db.delete(schema.trips).where(eq(schema.trips.id, id)).returning();
+    return result.length > 0;
   }
 
   // Crate operations
