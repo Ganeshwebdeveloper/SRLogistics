@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertRouteSchema } from "@shared/schema";
@@ -58,15 +58,10 @@ export function FleetManagement() {
   });
 
   const availableTrucks = trucks.filter((t) => t.status === "available");
-  const busyTrucks = trucks.filter((t) => t.status === "busy");
+  const busyTrucks = trucks.filter((t) => t.status === "on_trip");
 
-  const ongoingTrips = trips.filter((trip) => trip.status === "ongoing");
-  const availableDrivers = drivers.filter(
-    (driver) => !ongoingTrips.some((trip) => trip.driverId === driver.id)
-  );
-  const busyDrivers = drivers.filter(
-    (driver) => ongoingTrips.some((trip) => trip.driverId === driver.id)
-  );
+  const availableDrivers = drivers.filter((d) => d.status === "available");
+  const busyDrivers = drivers.filter((d) => d.status === "on_trip");
 
   const form = useForm<InsertRoute>({
     resolver: zodResolver(insertRouteSchema),
@@ -167,6 +162,7 @@ export function FleetManagement() {
                   <TableHead>Truck Number</TableHead>
                   <TableHead>Capacity (Liters)</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,8 +175,28 @@ export function FleetManagement() {
                         variant={truck.status === "available" ? "outline" : "default"}
                         data-testid={`badge-status-${truck.status}`}
                       >
-                        {truck.status.charAt(0).toUpperCase() + truck.status.slice(1)}
+                        {truck.status.charAt(0).toUpperCase() + truck.status.slice(1).replace("_", " ")}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-blue-600"
+                          data-testid={`button-edit-truck-${truck.id}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-red-600"
+                          data-testid={`button-delete-truck-${truck.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -237,26 +253,44 @@ export function FleetManagement() {
                   <TableHead>Driver Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {drivers.map((driver) => {
-                  const isOnTrip = ongoingTrips.some((trip) => trip.driverId === driver.id);
-                  return (
-                    <TableRow key={driver.id} data-testid={`row-driver-${driver.id}`}>
-                      <TableCell className="font-medium">{driver.name}</TableCell>
-                      <TableCell>{driver.email}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={isOnTrip ? "default" : "outline"}
-                          data-testid={`badge-driver-status-${isOnTrip ? "busy" : "available"}`}
+                {drivers.map((driver) => (
+                  <TableRow key={driver.id} data-testid={`row-driver-${driver.id}`}>
+                    <TableCell className="font-medium">{driver.name}</TableCell>
+                    <TableCell>{driver.email}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={driver.status === "available" ? "outline" : "default"}
+                        data-testid={`badge-driver-status-${driver.status}`}
+                      >
+                        {driver.status.charAt(0).toUpperCase() + driver.status.slice(1).replace("_", " ")}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-blue-600"
+                          data-testid={`button-edit-driver-${driver.id}`}
                         >
-                          {isOnTrip ? "On Trip" : "Available"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-red-600"
+                          data-testid={`button-delete-driver-${driver.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
@@ -412,6 +446,7 @@ export function FleetManagement() {
                   <TableHead>Route Name</TableHead>
                   <TableHead>Crate Count</TableHead>
                   <TableHead>Notes</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -423,6 +458,26 @@ export function FleetManagement() {
                     <TableCell>{route.crateCount}</TableCell>
                     <TableCell className="max-w-xs truncate">
                       {route.notes || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-blue-600"
+                          data-testid={`button-edit-route-${route.id}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-red-600"
+                          data-testid={`button-delete-route-${route.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

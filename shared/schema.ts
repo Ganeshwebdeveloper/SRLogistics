@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull().default("driver"), // 'admin' or 'driver'
-  status: text("status").notNull().default("active"), // 'active' or 'inactive'
+  status: text("status").notNull().default("available"), // 'available', 'on_trip', 'on_leave'
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -25,7 +25,7 @@ export const trucks = pgTable("trucks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   truckNumber: text("truck_number").notNull().unique(),
   capacity: integer("capacity").notNull(),
-  status: text("status").notNull().default("available"), // 'available' or 'busy'
+  status: text("status").notNull().default("available"), // 'available', 'on_trip', 'on_maintenance'
 });
 
 export const insertTruckSchema = createInsertSchema(trucks).omit({
