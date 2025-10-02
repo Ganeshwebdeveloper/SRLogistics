@@ -359,6 +359,105 @@
     animation: gradient-shift 8s ease infinite;
   }
 
+  /* Vibrant status gradients */
+  .gradient-success {
+    background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(160 84% 39%) 100%);
+  }
+
+  .dark .gradient-success {
+    background: linear-gradient(135deg, hsl(142 70% 45%) 0%, hsl(160 75% 48%) 100%);
+  }
+
+  .gradient-warning {
+    background: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(45 93% 47%) 100%);
+  }
+
+  .dark .gradient-warning {
+    background: linear-gradient(135deg, hsl(38 85% 60%) 0%, hsl(45 88% 57%) 100%);
+  }
+
+  .gradient-danger {
+    background: linear-gradient(135deg, hsl(0 72% 51%) 0%, hsl(15 80% 50%) 100%);
+  }
+
+  .dark .gradient-danger {
+    background: linear-gradient(135deg, hsl(0 65% 60%) 0%, hsl(15 75% 59%) 100%);
+  }
+
+  .gradient-info {
+    background: linear-gradient(135deg, hsl(200 100% 50%) 0%, hsl(192 95% 45%) 100%);
+  }
+
+  .dark .gradient-info {
+    background: linear-gradient(135deg, hsl(200 90% 60%) 0%, hsl(192 85% 55%) 100%);
+  }
+
+  /* Fleet-themed gradients */
+  .gradient-blue-teal {
+    background: linear-gradient(135deg, hsl(220 100% 55%) 0%, hsl(192 95% 45%) 100%);
+  }
+
+  .dark .gradient-blue-teal {
+    background: linear-gradient(135deg, hsl(220 90% 65%) 0%, hsl(192 85% 55%) 100%);
+  }
+
+  .gradient-purple-pink {
+    background: linear-gradient(135deg, hsl(270 60% 55%) 0%, hsl(330 80% 60%) 100%);
+  }
+
+  .dark .gradient-purple-pink {
+    background: linear-gradient(135deg, hsl(270 55% 65%) 0%, hsl(330 75% 70%) 100%);
+  }
+
+  .gradient-orange-red {
+    background: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(0 72% 51%) 100%);
+  }
+
+  .dark .gradient-orange-red {
+    background: linear-gradient(135deg, hsl(25 90% 63%) 0%, hsl(0 65% 60%) 100%);
+  }
+
+  .gradient-green-teal {
+    background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(192 95% 45%) 100%);
+  }
+
+  .dark .gradient-green-teal {
+    background: linear-gradient(135deg, hsl(142 70% 45%) 0%, hsl(192 85% 55%) 100%);
+  }
+
+  /* Card gradient backgrounds */
+  .gradient-card-blue {
+    background: linear-gradient(135deg, hsl(220 100% 55% / 0.1) 0%, hsl(200 100% 50% / 0.05) 100%);
+  }
+
+  .dark .gradient-card-blue {
+    background: linear-gradient(135deg, hsl(220 90% 65% / 0.15) 0%, hsl(200 90% 60% / 0.08) 100%);
+  }
+
+  .gradient-card-green {
+    background: linear-gradient(135deg, hsl(142 76% 36% / 0.1) 0%, hsl(160 84% 39% / 0.05) 100%);
+  }
+
+  .dark .gradient-card-green {
+    background: linear-gradient(135deg, hsl(142 70% 45% / 0.15) 0%, hsl(160 75% 48% / 0.08) 100%);
+  }
+
+  .gradient-card-orange {
+    background: linear-gradient(135deg, hsl(25 95% 53% / 0.1) 0%, hsl(38 92% 50% / 0.05) 100%);
+  }
+
+  .dark .gradient-card-orange {
+    background: linear-gradient(135deg, hsl(25 90% 63% / 0.15) 0%, hsl(38 85% 60% / 0.08) 100%);
+  }
+
+  .gradient-card-purple {
+    background: linear-gradient(135deg, hsl(270 60% 55% / 0.1) 0%, hsl(240 60% 50% / 0.05) 100%);
+  }
+
+  .dark .gradient-card-purple {
+    background: linear-gradient(135deg, hsl(270 55% 65% / 0.15) 0%, hsl(240 50% 60% / 0.08) 100%);
+  }
+
   /* Smooth fade-in animation */
   .animate-fade-in {
     animation: fade-in 0.5s ease-out;
@@ -376,6 +475,14 @@
     animation: scale-in 0.4s ease-out;
   }
 
+  .animate-pulse-slow {
+    animation: pulse-slow 2s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 1.5s ease-in-out infinite;
+  }
+
   /* Stagger animations for lists */
   .stagger-item {
     opacity: 0;
@@ -388,6 +495,46 @@
   .stagger-item:nth-child(4) { animation-delay: 0.4s; }
   .stagger-item:nth-child(5) { animation-delay: 0.5s; }
   .stagger-item:nth-child(6) { animation-delay: 0.6s; }
+
+  /* Hover effects */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px hsl(220 100% 55% / 0.3);
+  }
+
+  .dark .hover-lift:hover {
+    box-shadow: 0 12px 24px -8px hsl(220 90% 65% / 0.4);
+  }
+
+  /* Status indicator pulse */
+  .status-pulse {
+    position: relative;
+  }
+
+  .status-pulse::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    animation: pulse-ring 1.5s ease-out infinite;
+    opacity: 0;
+  }
+
+  .status-pulse-success::before {
+    background: hsl(142 76% 36% / 0.5);
+  }
+
+  .status-pulse-warning::before {
+    background: hsl(38 92% 50% / 0.5);
+  }
+
+  .status-pulse-danger::before {
+    background: hsl(0 72% 51% / 0.5);
+  }
 }
 
 @keyframes gradient-shift {
@@ -438,5 +585,34 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(220 100% 55% / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(220 100% 55% / 0.6), 0 0 30px hsl(220 100% 55% / 0.4);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
   }
 }
