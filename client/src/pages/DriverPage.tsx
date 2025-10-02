@@ -3,7 +3,8 @@ import { CrateCounter } from "@/components/CrateCounter";
 import { ChatInterface } from "@/components/ChatInterface";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Truck } from "lucide-react";
-import type { User } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import type { User, Trip } from "@shared/schema";
 
 interface DriverPageProps {
   user: User;
@@ -11,6 +12,32 @@ interface DriverPageProps {
 }
 
 export default function DriverPage({ user, onLogout }: DriverPageProps) {
+  const { data: trips, isLoading } = useQuery<Trip[]>({
+    queryKey: ["/api/trips/driver", user.id],
+  });
+
+  const currentTrip = trips?.find(
+    (trip) => trip.status === "in-progress" || trip.status === "scheduled"
+  );
+
+  const { data: truck } = useQuery({
+    queryKey: ["/api/trucks", currentTrip?.truckId],
+    enabled: !!currentTrip?.truckId,
+  });
+
+  const { data: route } = useQuery({
+    queryKey: ["/api/routes", currentTrip?.routeId],
+    enabled: !!currentTrip?.routeId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -27,18 +54,25 @@ export default function DriverPage({ user, onLogout }: DriverPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <DriverDashboard 
-              driverName="John Smith"
-              assignedTrip={{
-                truckNumber: "TRK-001",
-                route: "North District Route",
-                status: "not-started",
-              }}
+              driverName={user.name}
+              assignedTrip={
+                currentTrip
+                  ? {
+                      truckNumber: truck?.registrationNumber || "Unknown",
+                      route: route?.name || "Unknown Route",
+                      status: currentTrip.status === "scheduled" ? "not-started" : "in-progress",
+                    }
+                  : undefined
+              }
             />
-            <ChatInterface currentUserId="driver-1" currentUserName="John Smith" />
+            <ChatInterface currentUserId={user.id} currentUserName={user.name} />
           </div>
           
           <div>
-            <CrateCounter initialCount={100} />
+            <CrateCounter 
+              initialCount={currentTrip ? 100 : 0}
+              tripId={currentTrip?.id}
+            />
           </div>
         </div>
       </main>
