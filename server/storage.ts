@@ -50,6 +50,7 @@ export interface IStorage {
   updateRoute(id: string, route: Partial<Route>): Promise<Route | undefined>;
   deleteRoute(id: string): Promise<boolean>;
   getAllRoutes(): Promise<Route[]>;
+  getAvailableRoutes(): Promise<Route[]>;
   
   // Trip operations
   getTrip(id: string): Promise<Trip | undefined>;
@@ -167,6 +168,10 @@ export class DbStorage implements IStorage {
 
   async getAllRoutes(): Promise<Route[]> {
     return await db.select().from(schema.routes);
+  }
+
+  async getAvailableRoutes(): Promise<Route[]> {
+    return await db.select().from(schema.routes).where(eq(schema.routes.status, "available"));
   }
 
   // Trip operations

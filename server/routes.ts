@@ -344,6 +344,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/routes/available", requireAuth, async (req, res) => {
+    try {
+      const routes = await storage.getAvailableRoutes();
+      res.json(routes);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch available routes" });
+    }
+  });
+
   app.get("/api/routes/:id", requireAuth, async (req, res) => {
     try {
       const route = await storage.getRoute(req.params.id);
