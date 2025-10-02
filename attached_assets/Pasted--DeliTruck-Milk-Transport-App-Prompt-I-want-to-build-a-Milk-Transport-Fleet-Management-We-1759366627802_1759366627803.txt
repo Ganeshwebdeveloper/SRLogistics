@@ -1,0 +1,110 @@
+# 🚚 DeliTruck Milk Transport App – Prompt
+
+I want to build a **Milk Transport Fleet Management Web App** (DeliTruck).  
+The app should have **Admin (truck owner)** and **Driver** roles.  
+It must handle **trips, crates, live tracking, and group chat**.
+
+---
+
+## ⚙️ Tech Stack
+- **Backend**: Node.js + Express  
+- **Frontend**: React (Vite or Next.js)  
+- **Database**: Supabase (PostgreSQL) or Replit DB (for testing)  
+- **Real-time**: Socket.io or Supabase Realtime (for chat + tracking)  
+- **File Uploads**: Supabase Storage or local uploads (for photos)  
+- **UI**: Tailwind CSS  
+
+---
+
+## 🔐 Authentication
+- Admin login (milk truck owner)  
+- Driver login  
+
+---
+
+## 🗄️ Database Models
+
+**users**  
+- id  
+- name  
+- email  
+- password  
+- role (admin/driver)  
+- status (active/inactive)  
+
+**trucks**  
+- id  
+- truck_number  
+- capacity  
+- status (available/busy)  
+
+**routes**  
+- id  
+- route_name  
+- notes  
+
+**trips**  
+- id  
+- truck_id  
+- driver_id  
+- route_id  
+- start_time  
+- end_time  
+- distance_travelled  
+- avg_speed  
+- current_location  
+- status (ongoing/completed)  
+
+**crates**  
+- id  
+- trip_id  
+- initial_count  
+- remaining_count  
+- last_updated  
+
+**messages**  
+- id  
+- sender_id  
+- content (text or image)  
+- type (text/image)  
+- created_at  
+
+---
+
+## 📊 Admin Dashboard
+1. Assign **vehicles + routes** to drivers (only if available).  
+2. Track **driver location, speed, distance, trip start/end**.  
+3. Manage **crates balance** (initial count, plus/minus daily).  
+4. Group Chat admin (add/remove drivers, delete messages if needed).  
+
+---
+
+## 🚛 Driver Dashboard
+1. View assigned **trip and route**.  
+2. Start/End trip (record start & end time).  
+3. Update location (system calculates distance + speed).  
+4. Update **crates balance** (delivered/returned).  
+5. Join **group chat** (send text + photos).  
+
+---
+
+## 💬 Group Chat
+- Real-time messaging using Socket.io or Supabase Realtime.  
+- Admin + Drivers in one group.  
+- Text + Image support.  
+- Admin can remove drivers from chat.  
+
+---
+
+## 🎨 UI/UX
+- Clean, modern UI with Tailwind CSS.  
+- Separate dashboards (Admin vs Driver).  
+- Show **map for live tracking** (Google Maps API or Leaflet.js).  
+
+---
+
+## 📌 Notes
+- Store secrets (DB connection, API keys) in **environment variables**.  
+- Use **controllers, routes, models** for clean code structure.  
+- Include **sample seed data** (1 admin, 2 drivers, 2 trucks, 1 route, 1 trip).  
+- Code should be **scalable and easy to extend**.  
