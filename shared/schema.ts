@@ -43,6 +43,7 @@ export const routes = pgTable("routes", {
   routeName: text("route_name"),
   notes: text("notes"),
   crateCount: integer("crate_count").notNull().default(100),
+  status: text("status").notNull().default("available"), // 'available' or 'inactive'
 });
 
 export const insertRouteSchema = createInsertSchema(routes).omit({
