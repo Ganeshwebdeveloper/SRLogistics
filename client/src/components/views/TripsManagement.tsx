@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,12 +22,15 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, PlayCircle, CheckCircle } from "lucide-react";
 import type { Trip, User, Truck as TruckType, Route } from "@shared/schema";
 import { format, parseISO } from "date-fns";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function TripsManagement() {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "status" | "driver">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { toast } = useToast();
 
   const { data: trips = [], isLoading } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
@@ -109,6 +112,95 @@ export function TripsManagement() {
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
+  };
+
+  const startTripMutation = useMutation({
+    mutationFn: async (tripId: string) => {
+      const res = await apiRequest("PATCH", `/api/trips/${tripId}`, {
+        status: "ongoing",
+        startTime: new Date().toISOString(),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({
+        title: "Trip Started",
+        description: "The trip has been started successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start trip",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const completeTripMutation = useMutation({
+    mutationFn: async (tripId: string) => {
+      const res = await apiRequest("PATCH", `/api/trips/${tripId}`, {
+        status: "completed",
+        endTime: new Date().toISOString(),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({
+        title: "Trip Completed",
+        description: "The trip has been completed successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to complete trip",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTripMutation = useMutation({
+    mutationFn: async (tripId: string) => {
+      const res = await apiRequest("DELETE", `/api/trips/${tripId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      toast({
+        title: "Trip Deleted",
+        description: "The trip has been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete trip",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStartTrip = (tripId: string) => {
+    startTripMutation.mutate(tripId);
+  };
+
+  const handleCompleteTrip = (tripId: string) => {
+    completeTripMutation.mutate(tripId);
+  };
+
+  const handleDeleteTrip = (tripId: string) => {
+    if (confirm("Are you sure you want to delete this trip?")) {
+      deleteTripMutation.mutate(tripId);
+    }
   };
 
   return (
@@ -256,6 +348,8 @@ export function TripsManagement() {
                               size="icon"
                               variant="ghost"
                               className="h-8 w-8 text-green-600"
+                              onClick={() => handleStartTrip(trip.id)}
+                              disabled={startTripMutation.isPending}
                               data-testid={`button-start-trip-${trip.id}`}
                             >
                               <PlayCircle className="h-4 w-4" />
@@ -266,6 +360,8 @@ export function TripsManagement() {
                               size="icon"
                               variant="ghost"
                               className="h-8 w-8 text-green-600"
+                              onClick={() => handleCompleteTrip(trip.id)}
+                              disabled={completeTripMutation.isPending}
                               data-testid={`button-complete-trip-${trip.id}`}
                             >
                               <CheckCircle className="h-4 w-4" />
@@ -285,6 +381,8 @@ export function TripsManagement() {
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-red-600"
+                            onClick={() => handleDeleteTrip(trip.id)}
+                            disabled={deleteTripMutation.isPending}
                             data-testid={`button-delete-trip-${trip.id}`}
                           >
                             <Trash2 className="h-4 w-4" />

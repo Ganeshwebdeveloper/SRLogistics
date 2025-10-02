@@ -501,6 +501,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/trips/:id", requireAuth, async (req, res) => {
+    try {
+      const trip = await storage.getTrip(req.params.id);
+      if (!trip) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      
+      // Free up driver and truck if trip is not completed
+      if (trip.status !== "completed") {
+        await storage.updateTruck(trip.truckId, { status: "available" });
+        await storage.updateUser(trip.driverId, { status: "available" });
+      }
+      
+      const deleted = await storage.deleteTrip(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Trip not found" });
+      }
+      res.json({ message: "Trip deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete trip" });
+    }
+  });
+
   // Crate endpoints (attendance tracking)
   app.get("/api/crates", requireAuth, async (req, res) => {
     try {
