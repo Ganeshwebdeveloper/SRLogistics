@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Edit, Trash2, PlayCircle, CheckCircle } from "lucide-react";
 import type { Trip, User, Truck as TruckType, Route } from "@shared/schema";
 import { format, parseISO } from "date-fns";
 
@@ -229,6 +230,7 @@ export function TripsManagement() {
                     <TableHead>Status</TableHead>
                     <TableHead>Distance</TableHead>
                     <TableHead>Salary</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -247,6 +249,48 @@ export function TripsManagement() {
                       <TableCell>{getStatusBadge(trip.status)}</TableCell>
                       <TableCell>{trip.distanceTravelled || "0"} km</TableCell>
                       <TableCell>${trip.salary}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          {trip.status === "scheduled" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-green-600"
+                              data-testid={`button-start-trip-${trip.id}`}
+                            >
+                              <PlayCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {trip.status === "ongoing" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-green-600"
+                              data-testid={`button-complete-trip-${trip.id}`}
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {trip.status !== "completed" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-blue-600"
+                              data-testid={`button-edit-trip-${trip.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-red-600"
+                            data-testid={`button-delete-trip-${trip.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

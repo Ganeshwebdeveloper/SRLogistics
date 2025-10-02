@@ -20,6 +20,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -32,13 +49,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertRouteSchema } from "@shared/schema";
+import { insertRouteSchema, insertTruckSchema, insertUserSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Truck, User, Trip, Route, InsertRoute } from "@shared/schema";
+import type { Truck, User, Trip, Route, InsertRoute, InsertTruck } from "@shared/schema";
+import { z } from "zod";
 
 export function FleetManagement() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [addRouteDialogOpen, setAddRouteDialogOpen] = useState(false);
+  const [editTruckDialogOpen, setEditTruckDialogOpen] = useState(false);
+  const [editDriverDialogOpen, setEditDriverDialogOpen] = useState(false);
+  const [editRouteDialogOpen, setEditRouteDialogOpen] = useState(false);
+  const [deleteTruckDialogOpen, setDeleteTruckDialogOpen] = useState(false);
+  const [deleteDriverDialogOpen, setDeleteDriverDialogOpen] = useState(false);
+  const [deleteRouteDialogOpen, setDeleteRouteDialogOpen] = useState(false);
+  const [selectedTruck, setSelectedTruck] = useState<Truck | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<Omit<User, "password"> | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
   const { toast } = useToast();
 
   const { data: trucks = [], isLoading: isLoadingTrucks } = useQuery<Truck[]>({
@@ -63,7 +90,7 @@ export function FleetManagement() {
   const availableDrivers = drivers.filter((d) => d.status === "available");
   const busyDrivers = drivers.filter((d) => d.status === "on_trip");
 
-  const form = useForm<InsertRoute>({
+  const addRouteForm = useForm<InsertRoute>({
     resolver: zodResolver(insertRouteSchema),
     defaultValues: {
       origin: "",
@@ -74,6 +101,30 @@ export function FleetManagement() {
     },
   });
 
+  const updateTruckSchema = z.object({
+    truckNumber: z.string().min(1, "Truck number is required"),
+    capacity: z.number().min(1, "Capacity must be at least 1"),
+    status: z.enum(["available", "on_trip", "on_maintenance"]),
+  });
+
+  const editTruckForm = useForm<z.infer<typeof updateTruckSchema>>({
+    resolver: zodResolver(updateTruckSchema),
+  });
+
+  const updateDriverSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email address"),
+    status: z.enum(["available", "on_trip", "on_leave"]),
+  });
+
+  const editDriverForm = useForm<z.infer<typeof updateDriverSchema>>({
+    resolver: zodResolver(updateDriverSchema),
+  });
+
+  const editRouteForm = useForm<InsertRoute>({
+    resolver: zodResolver(insertRouteSchema),
+  });
+
   const createRouteMutation = useMutation({
     mutationFn: async (data: InsertRoute) => {
       const res = await apiRequest("POST", "/api/routes", data);
@@ -81,8 +132,8 @@ export function FleetManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/routes"] });
-      form.reset();
-      setDialogOpen(false);
+      addRouteForm.reset();
+      setAddRouteDialogOpen(false);
       toast({
         title: "Success",
         description: "Route created successfully",
@@ -97,8 +148,208 @@ export function FleetManagement() {
     },
   });
 
-  const onSubmit = (data: InsertRoute) => {
+  const updateTruckMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof updateTruckSchema>) => {
+      if (!selectedTruck) throw new Error("No truck selected");
+      const res = await apiRequest("PATCH", `/api/trucks/${selectedTruck.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      setEditTruckDialogOpen(false);
+      setSelectedTruck(null);
+      toast({
+        title: "Success",
+        description: "Truck updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTruckMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/trucks/${id}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      setDeleteTruckDialogOpen(false);
+      setSelectedTruck(null);
+      toast({
+        title: "Success",
+        description: "Truck deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateDriverMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof updateDriverSchema>) => {
+      if (!selectedDriver) throw new Error("No driver selected");
+      const res = await apiRequest("PATCH", `/api/users/${selectedDriver.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] });
+      setEditDriverDialogOpen(false);
+      setSelectedDriver(null);
+      toast({
+        title: "Success",
+        description: "Driver updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteDriverMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/users/${id}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] });
+      setDeleteDriverDialogOpen(false);
+      setSelectedDriver(null);
+      toast({
+        title: "Success",
+        description: "Driver deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateRouteMutation = useMutation({
+    mutationFn: async (data: InsertRoute) => {
+      if (!selectedRoute) throw new Error("No route selected");
+      const res = await apiRequest("PATCH", `/api/routes/${selectedRoute.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/routes"] });
+      setEditRouteDialogOpen(false);
+      setSelectedRoute(null);
+      toast({
+        title: "Success",
+        description: "Route updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteRouteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/routes/${id}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/routes"] });
+      setDeleteRouteDialogOpen(false);
+      setSelectedRoute(null);
+      toast({
+        title: "Success",
+        description: "Route deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onAddRouteSubmit = (data: InsertRoute) => {
     createRouteMutation.mutate(data);
+  };
+
+  const onEditTruckSubmit = (data: z.infer<typeof updateTruckSchema>) => {
+    updateTruckMutation.mutate(data);
+  };
+
+  const onEditDriverSubmit = (data: z.infer<typeof updateDriverSchema>) => {
+    updateDriverMutation.mutate(data);
+  };
+
+  const onEditRouteSubmit = (data: InsertRoute) => {
+    updateRouteMutation.mutate(data);
+  };
+
+  const handleEditTruck = (truck: Truck) => {
+    setSelectedTruck(truck);
+    editTruckForm.reset({
+      truckNumber: truck.truckNumber,
+      capacity: truck.capacity,
+      status: truck.status as "available" | "on_trip" | "on_maintenance",
+    });
+    setEditTruckDialogOpen(true);
+  };
+
+  const handleDeleteTruck = (truck: Truck) => {
+    setSelectedTruck(truck);
+    setDeleteTruckDialogOpen(true);
+  };
+
+  const handleEditDriver = (driver: Omit<User, "password">) => {
+    setSelectedDriver(driver);
+    editDriverForm.reset({
+      name: driver.name,
+      email: driver.email,
+      status: driver.status as "available" | "on_trip" | "on_leave",
+    });
+    setEditDriverDialogOpen(true);
+  };
+
+  const handleDeleteDriver = (driver: Omit<User, "password">) => {
+    setSelectedDriver(driver);
+    setDeleteDriverDialogOpen(true);
+  };
+
+  const handleEditRoute = (route: Route) => {
+    setSelectedRoute(route);
+    editRouteForm.reset({
+      origin: route.origin,
+      destination: route.destination,
+      routeName: route.routeName || "",
+      crateCount: route.crateCount,
+      notes: route.notes || "",
+    });
+    setEditRouteDialogOpen(true);
+  };
+
+  const handleDeleteRoute = (route: Route) => {
+    setSelectedRoute(route);
+    setDeleteRouteDialogOpen(true);
   };
 
   const scrollToSection = (id: string) => {
@@ -184,6 +435,7 @@ export function FleetManagement() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-blue-600"
+                          onClick={() => handleEditTruck(truck)}
                           data-testid={`button-edit-truck-${truck.id}`}
                         >
                           <Edit className="h-4 w-4" />
@@ -192,6 +444,7 @@ export function FleetManagement() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-red-600"
+                          onClick={() => handleDeleteTruck(truck)}
                           data-testid={`button-delete-truck-${truck.id}`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -275,6 +528,7 @@ export function FleetManagement() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-blue-600"
+                          onClick={() => handleEditDriver(driver)}
                           data-testid={`button-edit-driver-${driver.id}`}
                         >
                           <Edit className="h-4 w-4" />
@@ -283,6 +537,7 @@ export function FleetManagement() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-red-600"
+                          onClick={() => handleDeleteDriver(driver)}
                           data-testid={`button-delete-driver-${driver.id}`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -313,7 +568,7 @@ export function FleetManagement() {
       <Card id="routes-section">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle>All Routes</CardTitle>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={addRouteDialogOpen} onOpenChange={setAddRouteDialogOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-add-route">
                 <Plus className="h-4 w-4 mr-2" />
@@ -327,10 +582,10 @@ export function FleetManagement() {
                   Create a new route by specifying origin and destination
                 </DialogDescription>
               </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <Form {...addRouteForm}>
+                <form onSubmit={addRouteForm.handleSubmit(onAddRouteSubmit)} className="space-y-4">
                   <FormField
-                    control={form.control}
+                    control={addRouteForm.control}
                     name="origin"
                     render={({ field }) => (
                       <FormItem>
@@ -347,7 +602,7 @@ export function FleetManagement() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={addRouteForm.control}
                     name="destination"
                     render={({ field }) => (
                       <FormItem>
@@ -364,7 +619,7 @@ export function FleetManagement() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={addRouteForm.control}
                     name="routeName"
                     render={({ field }) => (
                       <FormItem>
@@ -382,7 +637,7 @@ export function FleetManagement() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={addRouteForm.control}
                     name="crateCount"
                     render={({ field }) => (
                       <FormItem>
@@ -391,7 +646,7 @@ export function FleetManagement() {
                           <Input
                             type="number"
                             {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 100)}
                             data-testid="input-cratecount"
                           />
                         </FormControl>
@@ -400,7 +655,7 @@ export function FleetManagement() {
                     )}
                   />
                   <FormField
-                    control={form.control}
+                    control={addRouteForm.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
@@ -465,6 +720,7 @@ export function FleetManagement() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-blue-600"
+                          onClick={() => handleEditRoute(route)}
                           data-testid={`button-edit-route-${route.id}`}
                         >
                           <Edit className="h-4 w-4" />
@@ -473,6 +729,7 @@ export function FleetManagement() {
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8 text-red-600"
+                          onClick={() => handleDeleteRoute(route)}
                           data-testid={`button-delete-route-${route.id}`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -486,6 +743,346 @@ export function FleetManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Truck Dialog */}
+      <Dialog open={editTruckDialogOpen} onOpenChange={setEditTruckDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Truck</DialogTitle>
+            <DialogDescription>
+              Update truck information
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editTruckForm}>
+            <form onSubmit={editTruckForm.handleSubmit(onEditTruckSubmit)} className="space-y-4">
+              <FormField
+                control={editTruckForm.control}
+                name="truckNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Truck Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., TRK-001"
+                        {...field}
+                        data-testid="input-edit-truck-number"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editTruckForm.control}
+                name="capacity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Capacity (Liters)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                        data-testid="input-edit-truck-capacity"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editTruckForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-truck-status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="available" data-testid="option-truck-available">Available</SelectItem>
+                        <SelectItem value="on_trip" data-testid="option-truck-on-trip">On Trip</SelectItem>
+                        <SelectItem value="on_maintenance" data-testid="option-truck-on-maintenance">On Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={updateTruckMutation.isPending}
+                data-testid="button-submit-edit-truck"
+              >
+                {updateTruckMutation.isPending ? "Updating..." : "Update Truck"}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Truck Dialog */}
+      <AlertDialog open={deleteTruckDialogOpen} onOpenChange={setDeleteTruckDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-truck">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the truck "{selectedTruck?.truckNumber}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-truck">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedTruck && deleteTruckMutation.mutate(selectedTruck.id)}
+              disabled={deleteTruckMutation.isPending}
+              data-testid="button-confirm-delete-truck"
+            >
+              {deleteTruckMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Driver Dialog */}
+      <Dialog open={editDriverDialogOpen} onOpenChange={setEditDriverDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Driver</DialogTitle>
+            <DialogDescription>
+              Update driver information
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editDriverForm}>
+            <form onSubmit={editDriverForm.handleSubmit(onEditDriverSubmit)} className="space-y-4">
+              <FormField
+                control={editDriverForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., John Doe"
+                        {...field}
+                        data-testid="input-edit-driver-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editDriverForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="e.g., john@example.com"
+                        {...field}
+                        data-testid="input-edit-driver-email"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editDriverForm.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-driver-status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="available" data-testid="option-driver-available">Available</SelectItem>
+                        <SelectItem value="on_trip" data-testid="option-driver-on-trip">On Trip</SelectItem>
+                        <SelectItem value="on_leave" data-testid="option-driver-on-leave">On Leave</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={updateDriverMutation.isPending}
+                data-testid="button-submit-edit-driver"
+              >
+                {updateDriverMutation.isPending ? "Updating..." : "Update Driver"}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Driver Dialog */}
+      <AlertDialog open={deleteDriverDialogOpen} onOpenChange={setDeleteDriverDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-driver">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the driver "{selectedDriver?.name}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-driver">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedDriver && deleteDriverMutation.mutate(selectedDriver.id)}
+              disabled={deleteDriverMutation.isPending}
+              data-testid="button-confirm-delete-driver"
+            >
+              {deleteDriverMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Route Dialog */}
+      <Dialog open={editRouteDialogOpen} onOpenChange={setEditRouteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Route</DialogTitle>
+            <DialogDescription>
+              Update route information
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editRouteForm}>
+            <form onSubmit={editRouteForm.handleSubmit(onEditRouteSubmit)} className="space-y-4">
+              <FormField
+                control={editRouteForm.control}
+                name="origin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>From (Origin)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., New York"
+                        {...field}
+                        data-testid="input-edit-origin"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editRouteForm.control}
+                name="destination"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To (Destination)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Los Angeles"
+                        {...field}
+                        data-testid="input-edit-destination"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editRouteForm.control}
+                name="routeName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Route Name (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., East Coast Route"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-edit-routename"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editRouteForm.control}
+                name="crateCount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Crate Count</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 100)}
+                        data-testid="input-edit-cratecount"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editRouteForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional information about this route"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-edit-notes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={updateRouteMutation.isPending}
+                data-testid="button-submit-edit-route"
+              >
+                {updateRouteMutation.isPending ? "Updating..." : "Update Route"}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Route Dialog */}
+      <AlertDialog open={deleteRouteDialogOpen} onOpenChange={setDeleteRouteDialogOpen}>
+        <AlertDialogContent data-testid="dialog-delete-route">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the route from "{selectedRoute?.origin}" to "{selectedRoute?.destination}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-route">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedRoute && deleteRouteMutation.mutate(selectedRoute.id)}
+              disabled={deleteRouteMutation.isPending}
+              data-testid="button-confirm-delete-route"
+            >
+              {deleteRouteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

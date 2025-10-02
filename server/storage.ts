@@ -48,6 +48,7 @@ export interface IStorage {
   getRoute(id: string): Promise<Route | undefined>;
   createRoute(route: InsertRoute): Promise<Route>;
   updateRoute(id: string, route: Partial<Route>): Promise<Route | undefined>;
+  deleteRoute(id: string): Promise<boolean>;
   getAllRoutes(): Promise<Route[]>;
   
   // Trip operations
@@ -155,6 +156,11 @@ export class DbStorage implements IStorage {
   async updateRoute(id: string, route: Partial<Route>): Promise<Route | undefined> {
     const result = await db.update(schema.routes).set(route).where(eq(schema.routes.id, id)).returning();
     return result[0];
+  }
+
+  async deleteRoute(id: string): Promise<boolean> {
+    const result = await db.delete(schema.routes).where(eq(schema.routes.id, id)).returning();
+    return result.length > 0;
   }
 
   async getAllRoutes(): Promise<Route[]> {

@@ -221,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: z.string().optional(),
         email: z.string().email().optional(),
         role: z.enum(["admin", "driver"]).optional(),
-        status: z.enum(["active", "inactive"]).optional(),
+        status: z.enum(["available", "on_trip", "on_leave"]).optional(),
       });
       
       const validatedData = updateUserSchema.parse(req.body);
@@ -233,6 +233,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteUser(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete user" });
     }
   });
 
@@ -310,6 +322,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/trucks/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteTruck(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Truck not found" });
+      }
+      res.json({ message: "Truck deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete truck" });
+    }
+  });
+
   // Route endpoints (protected)
   app.get("/api/routes", requireAuth, async (req, res) => {
     try {
@@ -351,6 +375,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(route);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update route" });
+    }
+  });
+
+  app.delete("/api/routes/:id", requireAdmin, async (req, res) => {
+    try {
+      const deleted = await storage.deleteRoute(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Route not found" });
+      }
+      res.json({ message: "Route deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to delete route" });
     }
   });
 
@@ -404,8 +440,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Route not found" });
       }
       
-      // Update truck status to busy
-      await storage.updateTruck(data.truckId, { status: "busy" });
+      // Verify driver and truck are available
+      const driver = await storage.getUser(data.driverId);
+      const truck = await storage.getTruck(data.truckId);
+      
+      if (!driver || !truck) {
+        return res.status(404).json({ message: "Driver or truck not found" });
+      }
+      
+      if (driver.status !== "available") {
+        return res.status(400).json({ message: "Driver is not available" });
+      }
+      if (truck.status !== "available") {
+        return res.status(400).json({ message: "Truck is not available" });
+      }
       
       const trip = await storage.createTrip(data);
       
@@ -429,9 +477,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Trip not found" });
       }
       
-      // If trip is completed, update truck status to available
-      if (req.body.status === "completed" && trip.truckId) {
+      // Handle status transitions
+      if (req.body.status === "ongoing") {
+        // When trip starts, update driver and truck status to on_trip
+        await storage.updateTruck(trip.truckId, { status: "on_trip" });
+        await storage.updateUser(trip.driverId, { status: "on_trip" });
+      } else if (req.body.status === "completed") {
+        // When trip completes, update driver and truck status to available
         await storage.updateTruck(trip.truckId, { status: "available" });
+        await storage.updateUser(trip.driverId, { status: "available" });
       }
       
       res.json(trip);

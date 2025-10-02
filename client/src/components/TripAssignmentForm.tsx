@@ -26,9 +26,11 @@ export function TripAssignmentForm() {
     queryKey: ["/api/trucks/available"],
   });
 
-  const { data: drivers = [] } = useQuery<Omit<User, "password">[]>({
+  const { data: allDrivers = [] } = useQuery<Omit<User, "password">[]>({
     queryKey: ["/api/users/drivers"],
   });
+
+  const drivers = allDrivers.filter((d) => d.status === "available");
 
   const { data: routes = [] } = useQuery<Route[]>({
     queryKey: ["/api/routes"],
@@ -138,7 +140,7 @@ export function TripAssignmentForm() {
                 ) : (
                   routes.map((route) => (
                     <SelectItem key={route.id} value={route.id}>
-                      {route.routeName}
+                      {route.origin} → {route.destination} {route.routeName ? `(${route.routeName})` : ""}
                     </SelectItem>
                   ))
                 )}
