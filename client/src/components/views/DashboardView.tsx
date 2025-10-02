@@ -69,14 +69,34 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
       <TripAssignmentForm />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Active Trips" value={ongoingTrips.length} icon={Truck} />
+        <StatsCard 
+          title="Active Trips" 
+          value={ongoingTrips.length} 
+          icon={Truck} 
+          gradientClass="gradient-card-blue"
+          iconColor="text-blue-500"
+        />
         <StatsCard
           title="Available Drivers"
           value={availableDrivers.length}
           icon={Users}
+          gradientClass="gradient-card-green"
+          iconColor="text-green-500"
         />
-        <StatsCard title="Total Distance" value={`${totalDistance} km`} icon={MapPin} />
-        <StatsCard title="Total Trips" value={trips.length} icon={Package} />
+        <StatsCard 
+          title="Total Distance" 
+          value={`${totalDistance} km`} 
+          icon={MapPin}
+          gradientClass="gradient-card-purple"
+          iconColor="text-purple-500"
+        />
+        <StatsCard 
+          title="Total Trips" 
+          value={trips.length} 
+          icon={Package}
+          gradientClass="gradient-card-orange"
+          iconColor="text-orange-500"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
