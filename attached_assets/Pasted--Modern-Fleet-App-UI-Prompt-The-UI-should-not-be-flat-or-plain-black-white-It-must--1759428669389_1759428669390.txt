@@ -1,0 +1,48 @@
+# 🚛 Modern Fleet App UI Prompt
+
+The **UI should not be flat or plain black & white**.  
+It must look **modern, colorful, and visually appealing**, matching the theme of **fleet, trucks, milk transport, and logistics**.
+
+## 🎨 Design Rules
+- **Colors & Gradients**
+  - Use **modern color palettes** (blue, teal, green, orange, purple gradients).  
+  - Apply **gradient backgrounds** for headers, buttons, and dashboards.  
+  - Example: `bg-gradient-to-r from-blue-500 via-teal-400 to-green-500`.
+
+- **Typography**
+  - Use **modern, bold fonts** (e.g., Inter, Poppins, Roboto).  
+  - Headings should stand out with **dark fonts**.  
+  - Use clear font sizing for hierarchy.
+
+- **Images & Icons**
+  - Include **fleet / trucks / vans / road illustrations** (SVGs or PNGs).  
+  - Add **modern icons** for navigation and statuses (use React Icons, Lordicon, or Lottie animations).  
+  - Place **thematic images** in dashboards and empty states (e.g., truck illustrations when no trips are active).
+
+- **Animations**
+  - Use **light but cool animations**:  
+    - Smooth fade-in for cards.  
+    - Hover scale-up on buttons.  
+    - Page transitions with slide/fade effects.  
+    - Status updates with subtle glow or color change.  
+  - Use **Lottie animations** for trucks moving, crates loading, or delivery icons.
+
+- **Status & Interactivity**
+  - Each trip should display a **status badge** (Ongoing, Completed, Pending).  
+  - Status badges should use **bright colors with gradients** (green, yellow, red).  
+  - Add **live updating visuals** (animated icons for "On the Road", "Delivered").  
+
+- **Layout & Components**
+  - Use Tailwind CSS with component libraries like **Flowbite, DaisyUI, or HyperUI**.  
+  - Dashboards must have **cards with gradient backgrounds** and **truck-related images/icons**.  
+  - Use **rounded corners, shadows, smooth blending** to avoid flatness.  
+
+## 🌟 Overall Goal
+Create a **modern, engaging UI** with:  
+- **Gradient colors**  
+- **Bold, standout fonts**  
+- **Truck & logistics images/icons**  
+- **Light animations**  
+- **Dynamic status updates**  
+
+The app should feel like a **modern fleet dashboard** rather than a plain white app.
