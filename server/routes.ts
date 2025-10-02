@@ -443,8 +443,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Driver, truck, or route not found" });
       }
       
+      // Check driver availability
+      if (driver.status === "on_leave") {
+        return res.status(400).json({ message: "Driver is on leave and cannot be assigned" });
+      }
+      if (driver.status === "on_trip") {
+        return res.status(400).json({ message: "Driver is already assigned to another trip" });
+      }
       if (driver.status !== "available") {
         return res.status(400).json({ message: "Driver is not available" });
+      }
+      
+      // Check truck availability
+      if (truck.status === "on_maintenance") {
+        return res.status(400).json({ message: "Truck is under maintenance and cannot be assigned" });
+      }
+      if (truck.status === "on_trip") {
+        return res.status(400).json({ message: "Truck is already assigned to another trip" });
       }
       if (truck.status !== "available") {
         return res.status(400).json({ message: "Truck is not available" });
