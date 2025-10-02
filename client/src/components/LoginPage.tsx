@@ -1,23 +1,48 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { Truck } from "lucide-react";
 import heroImage from "@assets/generated_images/Milk_delivery_truck_hero_image_f6477e41.png";
+import type { User } from "@shared/schema";
 
 interface LoginPageProps {
-  onLogin: (email: string, password: string, role: "admin" | "driver") => void;
+  onLogin: (user: User) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"admin" | "driver">("admin");
+  const { toast } = useToast();
+
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const response = await apiRequest("POST", "/api/auth/login", credentials);
+      return await response.json() as User;
+    },
+    onSuccess: (user) => {
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${user.name}`,
+      });
+      onLogin(user);
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Invalid credentials. Please try again.",
+      });
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(email, password, role);
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -59,6 +84,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     onChange={(e) => setEmail(e.target.value)}
                     data-testid="input-email"
                     required
+                    disabled={loginMutation.isPending}
                   />
                 </div>
                 
@@ -72,37 +98,25 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     data-testid="input-password"
                     required
+                    disabled={loginMutation.isPending}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Login as</Label>
-                  <div className="flex gap-4">
-                    <Button
-                      type="button"
-                      variant={role === "admin" ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setRole("admin")}
-                      data-testid="button-role-admin"
-                    >
-                      Admin
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={role === "driver" ? "default" : "outline"}
-                      className="flex-1"
-                      onClick={() => setRole("driver")}
-                      data-testid="button-role-driver"
-                    >
-                      Driver
-                    </Button>
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full" data-testid="button-login">
-                  Sign In
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  data-testid="button-login"
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
+              
+              <div className="mt-4 p-3 bg-muted rounded-md">
+                <p className="text-xs text-muted-foreground mb-2">Demo Credentials:</p>
+                <p className="text-xs">Admin: admin@delitruck.com / admin123</p>
+                <p className="text-xs">Driver: john@delitruck.com / driver123</p>
+              </div>
             </CardContent>
           </Card>
         </div>

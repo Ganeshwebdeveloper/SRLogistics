@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { insertUserSchema, insertTruckSchema, insertRouteSchema, insertTripSchema, insertCrateSchema, insertMessageSchema } from "@shared/schema";
+import { requireAuth, requireAdmin } from "./middleware";
+import "./types";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -90,6 +92,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Store user ID in session
+      req.session.userId = user.id;
+
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
@@ -97,8 +102,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User endpoints
-  app.get("/api/users", async (req, res) => {
+  app.post("/api/auth/logout", async (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.clearCookie("connect.sid");
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to get user" });
+    }
+  });
+
+  // User endpoints (protected)
+  app.get("/api/users", requireAuth, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       const usersWithoutPasswords = users.map(({ password, ...user }) => user);
@@ -108,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/drivers", async (req, res) => {
+  app.get("/api/users/drivers", requireAuth, async (req, res) => {
     try {
       const drivers = await storage.getDrivers();
       const driversWithoutPasswords = drivers.map(({ password, ...user }) => user);
@@ -118,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/:id", async (req, res) => {
+  app.get("/api/users/:id", requireAuth, async (req, res) => {
     try {
       const user = await storage.getUser(req.params.id);
       if (!user) {
@@ -131,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/users/:id", async (req, res) => {
+  app.patch("/api/users/:id", requireAdmin, async (req, res) => {
     try {
       // Create update schema that excludes password and validates allowed fields
       const updateUserSchema = z.object({
@@ -154,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Separate endpoint for password change with proper hashing
-  app.patch("/api/users/:id/password", async (req, res) => {
+  app.patch("/api/users/:id/password", requireAuth, async (req, res) => {
     try {
       const passwordSchema = z.object({
         newPassword: z.string().min(6),
@@ -174,8 +207,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Truck endpoints
-  app.get("/api/trucks", async (req, res) => {
+  // Truck endpoints (protected)
+  app.get("/api/trucks", requireAuth, async (req, res) => {
     try {
       const trucks = await storage.getAllTrucks();
       res.json(trucks);
@@ -184,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trucks/available", async (req, res) => {
+  app.get("/api/trucks/available", requireAuth, async (req, res) => {
     try {
       const trucks = await storage.getAvailableTrucks();
       res.json(trucks);
@@ -193,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trucks/:id", async (req, res) => {
+  app.get("/api/trucks/:id", requireAuth, async (req, res) => {
     try {
       const truck = await storage.getTruck(req.params.id);
       if (!truck) {
@@ -205,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/trucks", async (req, res) => {
+  app.post("/api/trucks", requireAdmin, async (req, res) => {
     try {
       const data = insertTruckSchema.parse(req.body);
       const truck = await storage.createTruck(data);
@@ -215,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/trucks/:id", async (req, res) => {
+  app.patch("/api/trucks/:id", requireAdmin, async (req, res) => {
     try {
       const truck = await storage.updateTruck(req.params.id, req.body);
       if (!truck) {
@@ -227,8 +260,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Route endpoints
-  app.get("/api/routes", async (req, res) => {
+  // Route endpoints (protected)
+  app.get("/api/routes", requireAuth, async (req, res) => {
     try {
       const routes = await storage.getAllRoutes();
       res.json(routes);
@@ -237,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/routes/:id", async (req, res) => {
+  app.get("/api/routes/:id", requireAuth, async (req, res) => {
     try {
       const route = await storage.getRoute(req.params.id);
       if (!route) {
@@ -249,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/routes", async (req, res) => {
+  app.post("/api/routes", requireAdmin, async (req, res) => {
     try {
       const data = insertRouteSchema.parse(req.body);
       const route = await storage.createRoute(data);
@@ -259,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/routes/:id", async (req, res) => {
+  app.patch("/api/routes/:id", requireAdmin, async (req, res) => {
     try {
       const route = await storage.updateRoute(req.params.id, req.body);
       if (!route) {
@@ -271,8 +304,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Trip endpoints
-  app.get("/api/trips", async (req, res) => {
+  // Trip endpoints (protected)
+  app.get("/api/trips", requireAuth, async (req, res) => {
     try {
       const trips = await storage.getAllTrips();
       res.json(trips);
@@ -281,7 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trips/ongoing", async (req, res) => {
+  app.get("/api/trips/ongoing", requireAuth, async (req, res) => {
     try {
       const trips = await storage.getOngoingTrips();
       res.json(trips);
@@ -290,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trips/driver/:driverId", async (req, res) => {
+  app.get("/api/trips/driver/:driverId", requireAuth, async (req, res) => {
     try {
       const trips = await storage.getTripsByDriver(req.params.driverId);
       res.json(trips);
@@ -299,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/trips/:id", async (req, res) => {
+  app.get("/api/trips/:id", requireAuth, async (req, res) => {
     try {
       const trip = await storage.getTrip(req.params.id);
       if (!trip) {
@@ -311,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/trips", async (req, res) => {
+  app.post("/api/trips", requireAuth, async (req, res) => {
     try {
       const data = insertTripSchema.parse(req.body);
       
@@ -325,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/trips/:id", async (req, res) => {
+  app.patch("/api/trips/:id", requireAuth, async (req, res) => {
     try {
       const trip = await storage.updateTrip(req.params.id, req.body);
       if (!trip) {
@@ -344,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Crate endpoints
-  app.get("/api/crates/trip/:tripId", async (req, res) => {
+  app.get("/api/crates/trip/:tripId", requireAuth, async (req, res) => {
     try {
       const crate = await storage.getCrateByTrip(req.params.tripId);
       if (!crate) {
@@ -356,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/crates", async (req, res) => {
+  app.post("/api/crates", requireAuth, async (req, res) => {
     try {
       const data = insertCrateSchema.parse(req.body);
       const crate = await storage.createCrate(data);
@@ -366,7 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/crates/:id", async (req, res) => {
+  app.patch("/api/crates/:id", requireAuth, async (req, res) => {
     try {
       const crate = await storage.updateCrate(req.params.id, req.body);
       if (!crate) {
@@ -379,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Message endpoints
-  app.get("/api/messages", async (req, res) => {
+  app.get("/api/messages", requireAuth, async (req, res) => {
     try {
       const messages = await storage.getAllMessages();
       res.json(messages);
@@ -388,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/messages", async (req, res) => {
+  app.post("/api/messages", requireAuth, async (req, res) => {
     try {
       const data = insertMessageSchema.parse(req.body);
       const message = await storage.createMessage(data);
@@ -398,7 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/messages/:id", async (req, res) => {
+  app.delete("/api/messages/:id", requireAuth, async (req, res) => {
     try {
       const deleted = await storage.deleteMessage(req.params.id);
       if (!deleted) {

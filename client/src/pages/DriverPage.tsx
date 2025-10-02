@@ -3,8 +3,14 @@ import { CrateCounter } from "@/components/CrateCounter";
 import { ChatInterface } from "@/components/ChatInterface";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Truck } from "lucide-react";
+import type { User } from "@shared/schema";
 
-export default function DriverPage() {
+interface DriverPageProps {
+  user: User;
+  onLogout: () => void;
+}
+
+export default function DriverPage({ user, onLogout }: DriverPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
