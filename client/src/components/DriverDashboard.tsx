@@ -119,39 +119,42 @@ export function DriverDashboard({
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
+    <div className="space-y-6 animate-fade-in">
+      <Card className="border-l-4 border-l-primary shadow-lg hover:shadow-xl transition-all duration-300">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Welcome, {driverName}</CardTitle>
-              <CardDescription>Your current trip assignment</CardDescription>
+              <CardTitle className="text-2xl font-bold">Welcome, {driverName}</CardTitle>
+              <CardDescription className="text-base mt-1">Your current trip assignment</CardDescription>
             </div>
-            <Badge variant={tripStatus === "ongoing" ? "default" : "secondary"}>
-              {tripStatus === "ongoing" ? "Active" : tripStatus === "completed" ? "Completed" : "Not Started"}
+            <Badge 
+              variant={tripStatus === "ongoing" ? "default" : "secondary"}
+              className="px-4 py-2 text-sm font-semibold shadow-md"
+            >
+              {tripStatus === "ongoing" ? "🚛 Active" : tripStatus === "completed" ? "✓ Completed" : "⏸ Not Started"}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Truck Number</p>
-              <p className="text-lg font-semibold">{assignedTrip.truckNumber}</p>
+        <CardContent className="space-y-6 pt-6">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="p-4 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-primary/20 hover:border-primary/40 transition-all duration-200">
+              <p className="text-sm text-muted-foreground font-semibold mb-2">Truck Number</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{assignedTrip.truckNumber}</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Route</p>
-              <p className="text-lg font-semibold">{assignedTrip.route}</p>
+            <div className="p-4 bg-gradient-to-br from-primary/5 to-transparent rounded-lg border border-primary/20 hover:border-primary/40 transition-all duration-200">
+              <p className="text-sm text-muted-foreground font-semibold mb-2">Route</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{assignedTrip.route}</p>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {tripStatus === "not-started" && (
               <Button 
                 onClick={startTrip} 
-                className="flex-1"
+                className="flex-1 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 data-testid="button-start-trip"
               >
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="h-5 w-5 mr-2" />
                 Start Trip
               </Button>
             )}
@@ -159,7 +162,7 @@ export function DriverDashboard({
               <Button 
                 onClick={endTrip} 
                 variant="destructive" 
-                className="flex-1"
+                className="flex-1 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 data-testid="button-end-trip"
               >
                 <Square className="h-4 w-4 mr-2" />
@@ -172,37 +175,52 @@ export function DriverDashboard({
 
       {tripStatus === "ongoing" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+          <Card className="group border-l-4 border-l-blue-500 hover:border-l-blue-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] animate-scale-in">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <MapPin className="h-8 w-8 text-primary" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative p-3 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-full">
+                    <MapPin className="h-8 w-8 text-blue-500" />
+                  </div>
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Distance</p>
-                  <p className="text-2xl font-bold">{distance.toFixed(1)} km</p>
+                  <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wide">Distance</p>
+                  <p className="text-3xl font-bold mt-1 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{distance.toFixed(1)} km</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group border-l-4 border-l-green-500 hover:border-l-green-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] animate-scale-in" style={{ animationDelay: '0.1s' }}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <Gauge className="h-8 w-8 text-primary" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-green-500/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative p-3 bg-gradient-to-br from-green-500/20 to-green-500/10 rounded-full">
+                    <Gauge className="h-8 w-8 text-green-500" />
+                  </div>
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg Speed</p>
-                  <p className="text-2xl font-bold">{speed.toFixed(0)} km/h</p>
+                  <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wide">Avg Speed</p>
+                  <p className="text-3xl font-bold mt-1 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">{speed.toFixed(0)} km/h</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group border-l-4 border-l-orange-500 hover:border-l-orange-600 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] animate-scale-in" style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <Clock className="h-8 w-8 text-primary" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
+                  <div className="relative p-3 bg-gradient-to-br from-orange-500/20 to-orange-500/10 rounded-full">
+                    <Clock className="h-8 w-8 text-orange-500" />
+                  </div>
+                </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Duration</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wide">Duration</p>
+                  <p className="text-3xl font-bold mt-1 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                     {Math.floor(duration / 60)}:{(duration % 60).toString().padStart(2, '0')}
                   </p>
                 </div>
