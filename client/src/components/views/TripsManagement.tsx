@@ -43,6 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { TripAssignmentForm } from "@/components/TripAssignmentForm";
 
 const editTripSchema = z.object({
   rupees: z.string().min(1, "Payment amount is required"),
@@ -293,6 +294,8 @@ export function TripsManagement() {
           View and manage all trips with filtering and sorting options
         </p>
       </div>
+
+      <TripAssignmentForm />
 
       <Card>
         <CardHeader>

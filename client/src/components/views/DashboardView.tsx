@@ -66,6 +66,8 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
         <p className="text-muted-foreground">Monitor and manage your fleet operations</p>
       </div>
 
+      <TripAssignmentForm />
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard title="Active Trips" value={ongoingTrips.length} icon={Truck} />
         <StatsCard
@@ -151,15 +153,9 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <MapView drivers={driversWithLocations} />
-          <ChatInterface currentUserId={userId} currentUserName={userName} />
-        </div>
-
-        <div>
-          <TripAssignmentForm />
-        </div>
+      <div className="grid grid-cols-1 gap-6">
+        <MapView drivers={driversWithLocations} />
+        <ChatInterface currentUserId={userId} currentUserName={userName} />
       </div>
     </div>
   );
