@@ -34,7 +34,7 @@ export function TripAssignmentForm() {
   const drivers = allDrivers.filter((d) => d.status === "available");
 
   const { data: routes = [] } = useQuery<Route[]>({
-    queryKey: ["/api/routes"],
+    queryKey: ["/api/routes/available"],
   });
 
   const createTripMutation = useMutation({
