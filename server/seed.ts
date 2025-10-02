@@ -87,6 +87,7 @@ async function seed() {
       destination: "City Center",
       routeName: "City Center Route",
       notes: "Main delivery route covering downtown area",
+      status: "available",
     }).returning();
     console.log("✓ Created route:", route1.routeName);
 
