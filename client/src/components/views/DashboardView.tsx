@@ -3,6 +3,16 @@ import { StatsCard } from "@/components/StatsCard";
 import { TripAssignmentForm } from "@/components/TripAssignmentForm";
 import { MapView } from "@/components/MapView";
 import { ChatInterface } from "@/components/ChatInterface";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Truck, Users, MapPin, Package } from "lucide-react";
 import type { User, Trip, Truck as TruckType } from "@shared/schema";
 
@@ -28,6 +38,8 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
   const availableDrivers = drivers.filter(
     (driver) => !ongoingTrips.some((trip) => trip.driverId === driver.id)
   );
+
+  const availableTrucks = trucks.filter((t) => t.status === "available");
 
   const totalDistance = trips
     .reduce((sum, trip) => sum + parseFloat(trip.distanceTravelled || "0"), 0)
@@ -63,6 +75,80 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
         />
         <StatsCard title="Total Distance" value={`${totalDistance} km`} icon={MapPin} />
         <StatsCard title="Total Trips" value={trips.length} icon={Package} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Drivers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {availableDrivers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No available drivers at the moment
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Driver Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {availableDrivers.map((driver) => (
+                    <TableRow key={driver.id} data-testid={`row-driver-${driver.id}`}>
+                      <TableCell className="font-medium">{driver.name}</TableCell>
+                      <TableCell>{driver.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" data-testid="badge-status-available">
+                          Available
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Vehicles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {availableTrucks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No available vehicles at the moment
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Truck Number</TableHead>
+                    <TableHead>Capacity (L)</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {availableTrucks.map((truck) => (
+                    <TableRow key={truck.id} data-testid={`row-truck-${truck.id}`}>
+                      <TableCell className="font-medium">{truck.truckNumber}</TableCell>
+                      <TableCell>{truck.capacity}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" data-testid="badge-status-available">
+                          Available
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
