@@ -51,12 +51,15 @@ export function CrateCounter({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="gradient-card-teal hover-lift shadow-xl overflow-hidden">
         <CardHeader>
-          <CardTitle>Crate Management</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white/90">Crate Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground">Loading...</div>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white/70">Loading...</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -67,49 +70,49 @@ export function CrateCounter({
   const delivered = currentInitialCount - remaining;
 
   return (
-    <Card>
+    <Card className="gradient-card-teal hover-lift shadow-xl overflow-hidden animate-fade-in">
       <CardHeader>
-        <CardTitle>Crate Management</CardTitle>
+        <CardTitle className="text-2xl font-bold text-white/90">Crate Management</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-2">Initial Count: {currentInitialCount}</p>
-          <div className="text-5xl font-bold my-4" data-testid="text-crate-remaining">{remaining}</div>
-          <p className="text-sm text-muted-foreground">Crates Remaining</p>
+        <div className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+          <p className="text-sm text-white/70 mb-3 uppercase tracking-wide">Initial Count: {currentInitialCount}</p>
+          <div className="text-6xl font-bold my-4 text-white animate-pulse-subtle" data-testid="text-crate-remaining">{remaining}</div>
+          <p className="text-sm text-white/70 uppercase tracking-wide">Crates Remaining</p>
         </div>
 
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-6">
           <Button
             size="icon"
             variant="outline"
-            className="h-12 w-12 rounded-full"
+            className="h-14 w-14 rounded-full border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-200"
             onClick={() => handleUpdate(-1)}
             disabled={updateCrateMutation.isPending || !tripId}
             data-testid="button-decrease-crate"
           >
-            <Minus className="h-5 w-5" />
+            <Minus className="h-6 w-6" />
           </Button>
           
           <Button
             size="icon"
             variant="outline"
-            className="h-12 w-12 rounded-full"
+            className="h-14 w-14 rounded-full border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-200"
             onClick={() => handleUpdate(1)}
             disabled={updateCrateMutation.isPending || !tripId}
             data-testid="button-increase-crate"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-6 w-6" />
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-chart-3" data-testid="text-crate-delivered">{delivered}</p>
-            <p className="text-xs text-muted-foreground mt-1">Delivered</p>
+        <div className="grid grid-cols-2 gap-4 pt-4">
+          <div className="text-center p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <p className="text-3xl font-bold text-white" data-testid="text-crate-delivered">{delivered}</p>
+            <p className="text-xs text-white/70 mt-2 uppercase tracking-wide">Delivered</p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-semibold text-chart-4">{remaining}</p>
-            <p className="text-xs text-muted-foreground mt-1">Remaining</p>
+          <div className="text-center p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <p className="text-3xl font-bold text-white">{remaining}</p>
+            <p className="text-xs text-white/70 mt-2 uppercase tracking-wide">Remaining</p>
           </div>
         </div>
       </CardContent>

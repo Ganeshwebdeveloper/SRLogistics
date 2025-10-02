@@ -106,21 +106,24 @@ export function ChatInterface({
 
   if (isLoading) {
     return (
-      <Card className="flex flex-col h-[500px]">
-        <CardHeader className="border-b">
-          <CardTitle>Group Chat</CardTitle>
+      <Card className="flex flex-col h-[500px] gradient-card-purple hover-lift shadow-xl overflow-hidden">
+        <CardHeader className="border-b border-white/20">
+          <CardTitle className="text-2xl font-bold text-white/90">Group Chat</CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex items-center justify-center">
-          <div className="text-center text-muted-foreground">Loading messages...</div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white/70">Loading messages...</p>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="flex flex-col h-[500px]">
-      <CardHeader className="border-b">
-        <CardTitle>Group Chat</CardTitle>
+    <Card className="flex flex-col h-[500px] gradient-card-purple hover-lift shadow-xl overflow-hidden animate-fade-in">
+      <CardHeader className="border-b border-white/20">
+        <CardTitle className="text-2xl font-bold text-white/90">Group Chat</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0">
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
@@ -130,26 +133,26 @@ export function ChatInterface({
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-3 ${isCurrentUser ? "flex-row-reverse" : ""}`}
+                  className={`flex gap-3 ${isCurrentUser ? "flex-row-reverse" : ""} animate-fade-in`}
                   data-testid={`message-${message.id}`}
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="text-xs">
+                  <Avatar className="h-8 w-8 border-2 border-white/30">
+                    <AvatarFallback className="text-xs bg-white/20 text-white backdrop-blur-sm">
                       {getInitials(message.senderName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className={`flex-1 ${isCurrentUser ? "items-end" : ""}`}>
                     <div className={`flex items-baseline gap-2 mb-1 ${isCurrentUser ? "flex-row-reverse" : ""}`}>
-                      <span className="text-sm font-medium">{message.senderName}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-sm font-medium text-white/90">{message.senderName}</span>
+                      <span className="text-xs text-white/60">
                         {formatTime(message.createdAt)}
                       </span>
                     </div>
                     <div
-                      className={`inline-block rounded-lg px-3 py-2 ${
+                      className={`inline-block rounded-xl px-4 py-2 shadow-md ${
                         isCurrentUser
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          ? "bg-white/20 text-white backdrop-blur-sm border border-white/30"
+                          : "bg-white/10 text-white/90 backdrop-blur-sm border border-white/20"
                       }`}
                     >
                       {message.content}
@@ -161,7 +164,7 @@ export function ChatInterface({
           </div>
         </ScrollArea>
         
-        <form onSubmit={handleSendMessage} className="p-4 border-t">
+        <form onSubmit={handleSendMessage} className="p-4 border-t border-white/20 bg-white/5">
           <div className="flex gap-2">
             <Button
               type="button"
@@ -169,6 +172,7 @@ export function ChatInterface({
               variant="ghost"
               data-testid="button-upload-image"
               onClick={() => console.log("Upload image clicked")}
+              className="text-white hover:bg-white/20"
             >
               <ImageIcon className="h-5 w-5" />
             </Button>
@@ -178,12 +182,14 @@ export function ChatInterface({
               placeholder="Type a message..."
               data-testid="input-message"
               disabled={!ws}
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/15"
             />
             <Button 
               type="submit" 
               size="icon" 
               data-testid="button-send-message"
               disabled={!ws || !newMessage.trim()}
+              className="bg-white/20 hover:bg-white/30 text-white border border-white/30"
             >
               <Send className="h-5 w-5" />
             </Button>
