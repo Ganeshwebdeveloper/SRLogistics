@@ -58,7 +58,7 @@ export const trips = pgTable("trips", {
   truckId: varchar("truck_id").notNull().references(() => trucks.id),
   driverId: varchar("driver_id").notNull().references(() => users.id),
   routeId: varchar("route_id").notNull().references(() => routes.id),
-  salary: decimal("salary", { precision: 10, scale: 2 }).notNull(),
+  rupees: decimal("rupees", { precision: 10, scale: 2 }).notNull(),
   startTime: timestamp("start_time"),
   endTime: timestamp("end_time"),
   distanceTravelled: decimal("distance_travelled", { precision: 10, scale: 2 }).default("0"),
@@ -74,12 +74,16 @@ export const insertTripSchema = createInsertSchema(trips).omit({
 export type InsertTrip = z.infer<typeof insertTripSchema>;
 export type Trip = typeof trips.$inferSelect;
 
-// Crates table
+// Crates table (Attendance-like tracking)
 export const crates = pgTable("crates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  tripId: varchar("trip_id").notNull().references(() => trips.id),
+  routeId: varchar("route_id").notNull().references(() => routes.id),
+  driverId: varchar("driver_id").notNull().references(() => users.id),
+  vehicleId: varchar("vehicle_id").notNull().references(() => trucks.id),
+  date: timestamp("date").notNull().defaultNow(),
   initialCount: integer("initial_count").notNull(),
   remainingCount: integer("remaining_count").notNull(),
+  remarks: text("remarks"),
   lastUpdated: timestamp("last_updated").notNull().defaultNow(),
 });
 
