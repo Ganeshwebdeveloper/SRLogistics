@@ -297,14 +297,14 @@ export function TripsManagement() {
 
       <TripAssignmentForm />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters & Sorting</CardTitle>
+      <Card className="hover-lift animate-fade-in gradient-card-blue">
+        <CardHeader className="border-b border-white/10">
+          <CardTitle className="text-white">Filters & Sorting</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="month-filter">Month</Label>
+              <Label htmlFor="month-filter" className="text-white/90">Month</Label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger id="month-filter" data-testid="select-month-filter">
                   <SelectValue placeholder="All Months" />
@@ -321,7 +321,7 @@ export function TripsManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status-filter">Status</Label>
+              <Label htmlFor="status-filter" className="text-white/90">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger id="status-filter" data-testid="select-status-filter">
                   <SelectValue placeholder="All Status" />
@@ -336,7 +336,7 @@ export function TripsManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sort-by">Sort By</Label>
+              <Label htmlFor="sort-by" className="text-white/90">Sort By</Label>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
                 <SelectTrigger id="sort-by" data-testid="select-sort-by">
                   <SelectValue placeholder="Sort by" />
@@ -350,7 +350,7 @@ export function TripsManagement() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sort-order">Order</Label>
+              <Label htmlFor="sort-order" className="text-white/90">Order</Label>
               <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as any)}>
                 <SelectTrigger id="sort-order" data-testid="select-sort-order">
                   <SelectValue placeholder="Order" />
@@ -374,17 +374,18 @@ export function TripsManagement() {
                 setSortOrder("desc");
               }}
               data-testid="button-reset-filters"
+              className="text-white border-white/30 hover:bg-white/20"
             >
               Reset Filters
             </Button>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-white/70">
               Showing {sortedTrips.length} of {trips.length} trips
             </span>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover-lift animate-fade-in">
         <CardHeader>
           <CardTitle>All Trips</CardTitle>
         </CardHeader>
