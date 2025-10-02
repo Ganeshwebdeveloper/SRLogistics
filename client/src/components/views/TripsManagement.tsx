@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,19 +19,56 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, PlayCircle, CheckCircle } from "lucide-react";
 import type { Trip, User, Truck as TruckType, Route } from "@shared/schema";
 import { format, parseISO } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const editTripSchema = z.object({
+  rupees: z.string().min(1, "Payment amount is required"),
+  distanceTravelled: z.string().optional(),
+  avgSpeed: z.string().optional(),
+  currentLocation: z.string().optional(),
+});
 
 export function TripsManagement() {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"date" | "status" | "driver">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [editTripDialogOpen, setEditTripDialogOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const { toast } = useToast();
+
+  const editTripForm = useForm<z.infer<typeof editTripSchema>>({
+    resolver: zodResolver(editTripSchema),
+    defaultValues: {
+      rupees: "",
+      distanceTravelled: "",
+      avgSpeed: "",
+      currentLocation: "",
+    },
+  });
 
   const { data: trips = [], isLoading } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
@@ -203,6 +241,50 @@ export function TripsManagement() {
     }
   };
 
+  const handleEditTrip = (trip: Trip) => {
+    setSelectedTrip(trip);
+    editTripForm.reset({
+      rupees: trip.rupees.toString(),
+      distanceTravelled: trip.distanceTravelled?.toString() || "",
+      avgSpeed: trip.avgSpeed?.toString() || "",
+      currentLocation: trip.currentLocation || "",
+    });
+    setEditTripDialogOpen(true);
+  };
+
+  const updateTripMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof editTripSchema>) => {
+      if (!selectedTrip) throw new Error("No trip selected");
+      const res = await apiRequest("PATCH", `/api/trips/${selectedTrip.id}`, {
+        rupees: data.rupees,
+        distanceTravelled: data.distanceTravelled || "0",
+        avgSpeed: data.avgSpeed || "0",
+        currentLocation: data.currentLocation || "",
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
+      setEditTripDialogOpen(false);
+      setSelectedTrip(null);
+      toast({
+        title: "Trip Updated",
+        description: "The trip has been updated successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update trip",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onEditTripSubmit = (data: z.infer<typeof editTripSchema>) => {
+    updateTripMutation.mutate(data);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -372,6 +454,7 @@ export function TripsManagement() {
                               size="icon"
                               variant="ghost"
                               className="h-8 w-8 text-blue-600"
+                              onClick={() => handleEditTrip(trip)}
                               data-testid={`button-edit-trip-${trip.id}`}
                             >
                               <Edit className="h-4 w-4" />
@@ -397,6 +480,113 @@ export function TripsManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Trip Dialog */}
+      <Dialog open={editTripDialogOpen} onOpenChange={setEditTripDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Trip</DialogTitle>
+            <DialogDescription>
+              Update trip information
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editTripForm}>
+            <form onSubmit={editTripForm.handleSubmit(onEditTripSubmit)} className="space-y-4">
+              <FormField
+                control={editTripForm.control}
+                name="rupees"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Amount (₹)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 5000"
+                        {...field}
+                        data-testid="input-edit-trip-rupees"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editTripForm.control}
+                name="distanceTravelled"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Distance Travelled (km)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 250"
+                        {...field}
+                        data-testid="input-edit-trip-distance"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editTripForm.control}
+                name="avgSpeed"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Average Speed (km/h)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g., 60"
+                        {...field}
+                        data-testid="input-edit-trip-speed"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editTripForm.control}
+                name="currentLocation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Location</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Highway 101, Mile 45"
+                        {...field}
+                        data-testid="input-edit-trip-location"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditTripDialogOpen(false)}
+                  data-testid="button-cancel-edit-trip"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateTripMutation.isPending}
+                  data-testid="button-submit-edit-trip"
+                >
+                  {updateTripMutation.isPending ? "Updating..." : "Update Trip"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
