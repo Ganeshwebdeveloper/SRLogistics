@@ -32,7 +32,7 @@
 
   --sidebar-border: 210 20% 91%;
 
-  --sidebar-primary: 211 100% 50%;
+  --sidebar-primary: 220 100% 55%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
@@ -40,7 +40,7 @@
 
   --sidebar-accent-foreground: 210 15% 20%;
 
-  --sidebar-ring: 211 100% 50%;
+  --sidebar-ring: 220 100% 55%;
 
   --popover: 210 20% 95%;
 
@@ -48,7 +48,7 @@
 
   --popover-border: 210 20% 90%;
 
-  --primary: 211 100% 50%;
+  --primary: 220 100% 55%;
 
   --primary-foreground: 0 0% 100%;
 
@@ -69,8 +69,8 @@
   --destructive-foreground: 0 0% 100%;
 
   --input: 210 20% 75%;
-  --ring: 211 100% 50%;
-  --chart-1: 211 100% 50%;
+  --ring: 220 100% 55%;
+  --chart-1: 220 100% 55%;
   --chart-2: 192 95% 45%;
   --chart-3: 142 76% 36%;
   --chart-4: 38 92% 50%;
@@ -150,7 +150,7 @@
 
   --sidebar-border: 210 15% 24%;
 
-  --sidebar-primary: 211 100% 65%;
+  --sidebar-primary: 220 100% 65%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
@@ -158,7 +158,7 @@
 
   --sidebar-accent-foreground: 210 10% 90%;
 
-  --sidebar-ring: 211 100% 65%;
+  --sidebar-ring: 220 100% 65%;
 
   --popover: 210 15% 20%;
 
@@ -166,7 +166,7 @@
 
   --popover-border: 210 15% 26%;
 
-  --primary: 211 90% 58%;
+  --primary: 220 90% 65%;
 
   --primary-foreground: 0 0% 100%;
 
@@ -187,8 +187,8 @@
   --destructive-foreground: 0 0% 100%;
 
   --input: 210 15% 35%;
-  --ring: 211 100% 65%;
-  --chart-1: 211 100% 65%;
+  --ring: 220 100% 65%;
+  --chart-1: 220 100% 65%;
   --chart-2: 192 85% 55%;
   --chart-3: 142 70% 45%;
   --chart-4: 38 85% 60%;
@@ -324,5 +324,119 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* Gradient utilities for modern design */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(220 100% 55%) 0%, hsl(200 100% 50%) 100%);
+  }
+
+  .dark .gradient-primary {
+    background: linear-gradient(135deg, hsl(220 90% 65%) 0%, hsl(200 90% 60%) 100%);
+  }
+
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(240 60% 50%) 0%, hsl(220 100% 55%) 100%);
+  }
+
+  .dark .gradient-secondary {
+    background: linear-gradient(135deg, hsl(240 50% 60%) 0%, hsl(220 90% 65%) 100%);
+  }
+
+  .gradient-overlay {
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  }
+
+  .gradient-header {
+    background: linear-gradient(135deg, hsl(220 100% 55%) 0%, hsl(200 100% 50%) 50%, hsl(220 100% 55%) 100%);
+    background-size: 200% 100%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  .dark .gradient-header {
+    background: linear-gradient(135deg, hsl(220 90% 65%) 0%, hsl(200 90% 60%) 50%, hsl(220 90% 65%) 100%);
+    background-size: 200% 100%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  /* Smooth fade-in animation */
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out;
+  }
+
+  /* Stagger animations for lists */
+  .stagger-item {
+    opacity: 0;
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
+  .stagger-item:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-item:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-item:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-item:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-item:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-item:nth-child(6) { animation-delay: 0.6s; }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

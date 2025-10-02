@@ -50,14 +50,14 @@ export default function AdminDashboardPage({ user, onLogout }: AdminDashboardPag
       <div className="flex h-screen w-full">
         <AdminSidebar activeItem={activeView} onItemClick={setActiveView} />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between p-4 border-b gap-2">
-            <div className="flex items-center gap-2">
+          <header className="gradient-header flex items-center justify-between p-4 border-b gap-2 text-primary-foreground shadow-md">
+            <div className="flex items-center gap-2 animate-slide-in-right">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <span className="text-sm text-muted-foreground hidden sm:inline">
+              <span className="text-sm font-medium hidden sm:inline">
                 Welcome, {user.name}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 animate-slide-in-right">
               <ThemeToggle />
               <Button
                 variant="ghost"
@@ -65,13 +65,14 @@ export default function AdminDashboardPage({ user, onLogout }: AdminDashboardPag
                 onClick={onLogout}
                 data-testid="button-logout"
                 title="Logout"
+                className="text-primary-foreground hover:bg-white/20"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
           </header>
           
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-6 animate-fade-in">
             {renderView()}
           </main>
         </div>
