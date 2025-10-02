@@ -40,6 +40,7 @@ export const routes = pgTable("routes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   routeName: text("route_name").notNull(),
   notes: text("notes"),
+  crateCount: integer("crate_count").notNull().default(100),
 });
 
 export const insertRouteSchema = createInsertSchema(routes).omit({
@@ -55,6 +56,7 @@ export const trips = pgTable("trips", {
   truckId: varchar("truck_id").notNull().references(() => trucks.id),
   driverId: varchar("driver_id").notNull().references(() => users.id),
   routeId: varchar("route_id").notNull().references(() => routes.id),
+  salary: decimal("salary", { precision: 10, scale: 2 }).notNull(),
   startTime: timestamp("start_time"),
   endTime: timestamp("end_time"),
   distanceTravelled: decimal("distance_travelled", { precision: 10, scale: 2 }).default("0"),

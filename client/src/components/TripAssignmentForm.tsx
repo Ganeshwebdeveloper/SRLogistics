@@ -19,7 +19,7 @@ export function TripAssignmentForm() {
   const [truckId, setTruckId] = useState("");
   const [driverId, setDriverId] = useState("");
   const [routeId, setRouteId] = useState("");
-  const [crateCount, setCrateCount] = useState("100");
+  const [salary, setSalary] = useState("");
   const { toast } = useToast();
 
   const { data: trucks = [] } = useQuery<Truck[]>({
@@ -35,25 +35,17 @@ export function TripAssignmentForm() {
   });
 
   const createTripMutation = useMutation({
-    mutationFn: async (data: { truckId: string; driverId: string; routeId: string; crateCount: number }) => {
+    mutationFn: async (data: { truckId: string; driverId: string; routeId: string; salary: string }) => {
       const tripResponse = await apiRequest("POST", "/api/trips", {
         truckId: data.truckId,
         driverId: data.driverId,
         routeId: data.routeId,
-        startTime: new Date().toISOString(),
+        salary: data.salary,
         currentLocation: "Starting Point",
-        status: "ongoing",
+        status: "scheduled",
       });
       
-      const trip = await tripResponse.json();
-      
-      await apiRequest("POST", "/api/crates", {
-        tripId: trip.id,
-        initialCount: data.crateCount,
-        remainingCount: data.crateCount,
-      });
-      
-      return trip;
+      return await tripResponse.json();
     },
     onSuccess: () => {
       toast({
@@ -65,7 +57,7 @@ export function TripAssignmentForm() {
       setTruckId("");
       setDriverId("");
       setRouteId("");
-      setCrateCount("100");
+      setSalary("");
     },
     onError: (error: Error) => {
       toast({
@@ -82,7 +74,7 @@ export function TripAssignmentForm() {
       truckId,
       driverId,
       routeId,
-      crateCount: parseInt(crateCount),
+      salary,
     });
   };
 
@@ -155,14 +147,16 @@ export function TripAssignmentForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="crates">Initial Crate Count</Label>
+            <Label htmlFor="salary">Driver Salary</Label>
             <Input
-              id="crates"
+              id="salary"
               type="number"
-              min="1"
-              value={crateCount}
-              onChange={(e) => setCrateCount(e.target.value)}
-              data-testid="input-crate-count"
+              min="0"
+              step="0.01"
+              value={salary}
+              onChange={(e) => setSalary(e.target.value)}
+              placeholder="Enter salary amount"
+              data-testid="input-salary"
               required
               disabled={createTripMutation.isPending}
             />
@@ -172,7 +166,7 @@ export function TripAssignmentForm() {
             type="submit" 
             className="w-full" 
             data-testid="button-assign-trip"
-            disabled={createTripMutation.isPending || !truckId || !driverId || !routeId}
+            disabled={createTripMutation.isPending || !truckId || !driverId || !routeId || !salary}
           >
             {createTripMutation.isPending ? "Assigning..." : "Assign Trip"}
           </Button>

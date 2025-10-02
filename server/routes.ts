@@ -398,10 +398,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = insertTripSchema.parse(req.body);
       
+      // Get route to retrieve crate count
+      const route = await storage.getRoute(data.routeId);
+      if (!route) {
+        return res.status(404).json({ message: "Route not found" });
+      }
+      
       // Update truck status to busy
       await storage.updateTruck(data.truckId, { status: "busy" });
       
       const trip = await storage.createTrip(data);
+      
+      // Automatically create crate record based on route's crate count
+      await storage.createCrate({
+        tripId: trip.id,
+        initialCount: route.crateCount,
+        remainingCount: route.crateCount,
+      });
+      
       res.status(201).json(trip);
     } catch (error) {
       res.status(400).json({ message: error instanceof Error ? error.message : "Invalid data" });
