@@ -58,6 +58,7 @@ import { z } from "zod";
 export function FleetManagement() {
   const [addRouteDialogOpen, setAddRouteDialogOpen] = useState(false);
   const [addDriverDialogOpen, setAddDriverDialogOpen] = useState(false);
+  const [addTruckDialogOpen, setAddTruckDialogOpen] = useState(false);
   const [editTruckDialogOpen, setEditTruckDialogOpen] = useState(false);
   const [editDriverDialogOpen, setEditDriverDialogOpen] = useState(false);
   const [editRouteDialogOpen, setEditRouteDialogOpen] = useState(false);
@@ -113,6 +114,15 @@ export function FleetManagement() {
       email: "",
       password: "",
       role: "driver",
+      status: "available",
+    },
+  });
+
+  const addTruckForm = useForm<InsertTruck>({
+    resolver: zodResolver(insertTruckSchema),
+    defaultValues: {
+      truckNumber: "",
+      capacity: 0,
       status: "available",
     },
   });
@@ -176,6 +186,29 @@ export function FleetManagement() {
       toast({
         title: "Success",
         description: "Driver added successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createTruckMutation = useMutation({
+    mutationFn: async (data: InsertTruck) => {
+      const res = await apiRequest("POST", "/api/trucks", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
+      addTruckForm.reset();
+      setAddTruckDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Vehicle added successfully",
       });
     },
     onError: (error: Error) => {
@@ -336,6 +369,10 @@ export function FleetManagement() {
     createDriverMutation.mutate(data);
   };
 
+  const onAddTruckSubmit = (data: InsertTruck) => {
+    createTruckMutation.mutate(data);
+  };
+
   const onEditTruckSubmit = (data: z.infer<typeof updateTruckSchema>) => {
     updateTruckMutation.mutate(data);
   };
@@ -443,8 +480,99 @@ export function FleetManagement() {
       </div>
 
       <Card id="trucks-section">
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle>All Trucks</CardTitle>
+          <Dialog open={addTruckDialogOpen} onOpenChange={setAddTruckDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-vehicle">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Vehicle
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Vehicle</DialogTitle>
+                <DialogDescription>
+                  Create a new vehicle by specifying truck number and capacity
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...addTruckForm}>
+                <form onSubmit={addTruckForm.handleSubmit(onAddTruckSubmit)} className="space-y-4">
+                  <FormField
+                    control={addTruckForm.control}
+                    name="truckNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Truck Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., TRK-001"
+                            {...field}
+                            data-testid="input-truck-number"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addTruckForm.control}
+                    name="capacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Capacity (Liters)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="e.g., 5000"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            data-testid="input-capacity"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addTruckForm.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-status">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="on_trip">On Trip</SelectItem>
+                            <SelectItem value="on_maintenance">On Maintenance</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAddTruckDialogOpen(false)}
+                      data-testid="button-cancel-add-vehicle"
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createTruckMutation.isPending} data-testid="button-submit-add-vehicle">
+                      {createTruckMutation.isPending ? "Adding..." : "Add Vehicle"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           {isLoadingTrucks ? (
