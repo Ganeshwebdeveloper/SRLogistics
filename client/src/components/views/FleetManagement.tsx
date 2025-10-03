@@ -536,8 +536,98 @@ export function FleetManagement() {
       </div>
 
       <Card id="drivers-section">
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
           <CardTitle>All Drivers</CardTitle>
+          <Dialog open={addDriverDialogOpen} onOpenChange={setAddDriverDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-driver">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Driver
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Driver</DialogTitle>
+                <DialogDescription>
+                  Create a new driver account with name, email, and password
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...addDriverForm}>
+                <form onSubmit={addDriverForm.handleSubmit(onAddDriverSubmit)} className="space-y-4">
+                  <FormField
+                    control={addDriverForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Driver Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., John Doe"
+                            {...field}
+                            data-testid="input-driver-name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addDriverForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="e.g., john@example.com"
+                            {...field}
+                            data-testid="input-driver-email"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={addDriverForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Minimum 6 characters"
+                            {...field}
+                            data-testid="input-driver-password"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setAddDriverDialogOpen(false)}
+                      data-testid="button-cancel-driver"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createDriverMutation.isPending}
+                      data-testid="button-submit-driver"
+                    >
+                      {createDriverMutation.isPending ? "Adding..." : "Add Driver"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           {isLoadingDrivers ? (
