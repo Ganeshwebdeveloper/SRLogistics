@@ -81,6 +81,13 @@ export function LiveTracking() {
       try {
         const message = JSON.parse(event.data);
         if (message.type === "location_update") {
+          console.log("📍 Received GPS location update:", {
+            tripId: message.tripId,
+            latitude: message.latitude,
+            longitude: message.longitude,
+            timestamp: message.timestamp
+          });
+          
           setGpsLocations((prev) => {
             const updated = new Map(prev);
             const previousLocation = prev.get(message.tripId);
@@ -90,6 +97,8 @@ export function LiveTracking() {
               timestamp: message.timestamp,
             };
             updated.set(message.tripId, newLocation);
+            
+            console.log("🗺️ Updated GPS locations map:", Array.from(updated.entries()));
 
             // Calculate distance if we have a previous location
             if (previousLocation) {
@@ -182,6 +191,14 @@ export function LiveTracking() {
     const position: [number, number] = gpsLocation 
       ? [gpsLocation.latitude, gpsLocation.longitude]
       : DEFAULT_LOCATION;
+    
+    console.log(`🚚 Driver location for trip ${trip.id}:`, {
+      truckNumber,
+      driverName: driver?.name,
+      gpsLocation,
+      position,
+      hasGpsData: !!gpsLocation
+    });
     
     return {
       id: trip.id,

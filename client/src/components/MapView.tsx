@@ -44,11 +44,19 @@ export function MapView({ drivers = [] }: MapViewProps) {
     });
 
     drivers.forEach((driver) => {
+      console.log(`📌 Processing marker for ${driver.name}:`, {
+        id: driver.id,
+        position: driver.position,
+        truckNumber: driver.truckNumber
+      });
+      
       const existingMarker = markersMapRef.current.get(driver.id);
       
       if (existingMarker) {
+        console.log(`  ↪️ Updating existing marker position to:`, driver.position);
         existingMarker.setLatLng(driver.position);
       } else {
+        console.log(`  ✨ Creating new marker at:`, driver.position);
         const color = driver.color || "#3b82f6";
         const customIcon = L.divIcon({
           className: 'custom-div-icon',

@@ -142,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
 
-            console.log(`Location updated for trip ${tripId}:`, locationData);
+            console.log(`📍 Location updated for trip ${tripId}:`, locationData);
 
             // Broadcast location update to all connected clients
             const broadcastMessage = {
@@ -152,6 +152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               longitude,
               timestamp,
             };
+
+            console.log(`📡 Broadcasting GPS data to ${clients.size} clients:`, broadcastMessage);
 
             const broadcastData = JSON.stringify(broadcastMessage);
             clients.forEach((client) => {
