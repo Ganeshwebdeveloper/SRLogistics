@@ -179,7 +179,7 @@ export function DriverDashboard({
       
       const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
         status: "ongoing",
-        startTime: new Date().toISOString(),
+        startTime: new Date(),
         startLatitude: currentLocation.latitude,
         startLongitude: currentLocation.longitude,
       });
@@ -211,7 +211,7 @@ export function DriverDashboard({
       if (!tripId) throw new Error("No trip ID provided");
       const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
         status: "completed",
-        endTime: new Date().toISOString(),
+        endTime: new Date(),
         distanceTravelled: distance.toFixed(2),
         avgSpeed: speed.toFixed(2),
         ...(currentLocation && {
