@@ -35,7 +35,8 @@ export function DriverDashboard({
   const [distance, setDistance] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number; accuracy?: number } | null>(null);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -73,10 +74,23 @@ export function DriverDashboard({
     // Request initial position
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const accuracy = position.coords.accuracy;
+        setGpsAccuracy(accuracy);
         setCurrentLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
+          accuracy: accuracy,
         });
+        
+        if (accuracy > 100) {
+          toast({
+            variant: "destructive",
+            title: "Low GPS Accuracy",
+            description: `GPS accuracy is ${Math.round(accuracy)}m. Please wait for better signal or move to an open area.`,
+          });
+        }
+        
+        console.log(`📍 GPS Position: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} (accuracy: ${Math.round(accuracy)}m)`);
       },
       (error) => {
         let errorMessage = "Unable to retrieve your location.";
@@ -96,7 +110,7 @@ export function DriverDashboard({
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       }
     );
@@ -104,17 +118,22 @@ export function DriverDashboard({
     // Watch position continuously
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        const accuracy = position.coords.accuracy;
+        setGpsAccuracy(accuracy);
         setCurrentLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
+          accuracy: accuracy,
         });
+        
+        console.log(`📍 GPS Update: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} (accuracy: ${Math.round(accuracy)}m)`);
       },
       (error) => {
         console.error("GPS tracking error:", error);
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       }
     );
@@ -169,8 +188,14 @@ export function DriverDashboard({
             tripId: tripId,
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
+            accuracy: gpsAccuracy || currentLocation.accuracy,
             timestamp: new Date().toISOString(),
           };
+          console.log(`📤 Sending GPS update:`, {
+            lat: currentLocation.latitude.toFixed(6),
+            lon: currentLocation.longitude.toFixed(6),
+            accuracy: gpsAccuracy ? `±${Math.round(gpsAccuracy)}m` : 'unknown'
+          });
           ws.send(JSON.stringify(locationUpdate));
         }
       };
@@ -195,8 +220,21 @@ export function DriverDashboard({
       if (!tripId) throw new Error("No trip ID provided");
       if (!currentLocation) throw new Error("GPS location not available");
       
+      if (gpsAccuracy && gpsAccuracy > 50) {
+        toast({
+          variant: "destructive",
+          title: "Poor GPS Accuracy Warning",
+          description: `GPS accuracy is ${Math.round(gpsAccuracy)}m. For best results, wait for better signal (accuracy < 50m). Starting anyway...`,
+        });
+      }
+      
       const now = new Date();
-      console.log("Starting trip with timestamp:", now.toISOString());
+      console.log("Starting trip with GPS:", {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        accuracy: gpsAccuracy,
+        timestamp: now.toISOString()
+      });
       
       const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
         status: "ongoing",
@@ -394,10 +432,28 @@ export function DriverDashboard({
 
           {currentLocation && (
             <div className="p-5 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20" data-testid="gps-location">
-              <p className="text-sm text-white/70 font-semibold mb-2 uppercase tracking-wide">GPS Location</p>
-              <p className="text-sm text-white">
-                Lat: {currentLocation.latitude.toFixed(6)}, Lon: {currentLocation.longitude.toFixed(6)}
-              </p>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-sm text-white/70 font-semibold mb-2 uppercase tracking-wide">GPS Location</p>
+                  <p className="text-sm text-white">
+                    Lat: {currentLocation.latitude.toFixed(6)}, Lon: {currentLocation.longitude.toFixed(6)}
+                  </p>
+                </div>
+                {gpsAccuracy && (
+                  <Badge 
+                    variant={gpsAccuracy < 20 ? "success" : gpsAccuracy < 50 ? "warning" : "destructive"}
+                    className="text-xs font-semibold"
+                    data-testid="badge-gps-accuracy"
+                  >
+                    ±{Math.round(gpsAccuracy)}m
+                  </Badge>
+                )}
+              </div>
+              {gpsAccuracy && gpsAccuracy > 50 && (
+                <p className="text-xs text-white/60 mt-2">
+                  ⚠️ Low accuracy - Move to an open area for better GPS signal
+                </p>
+              )}
             </div>
           )}
 
