@@ -3,6 +3,7 @@ import session from "express-session";
 import memorystore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -93,4 +94,22 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // Schedule photo cleanup job
+  const cleanupOldPhotos = async () => {
+    try {
+      const deletedCount = await storage.deleteOldImageMessages(24);
+      if (deletedCount > 0) {
+        log(`Deleted ${deletedCount} old photo messages`);
+      }
+    } catch (error) {
+      console.error("Error cleaning up old photos:", error);
+    }
+  };
+
+  // Run cleanup every hour
+  setInterval(cleanupOldPhotos, 60 * 60 * 1000);
+  
+  // Also run cleanup on startup
+  cleanupOldPhotos();
 })();

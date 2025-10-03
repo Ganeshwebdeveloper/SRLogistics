@@ -171,11 +171,11 @@ export function ChatInterface({
   }
 
   return (
-    <Card className="flex flex-col h-[600px] bg-background border shadow-lg">
-      {/* Header */}
-      <div className="px-4 py-3 border-b bg-card flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <Card className="flex flex-col h-[600px] bg-background border-0 shadow-xl rounded-lg overflow-hidden">
+      {/* Header - WhatsApp style */}
+      <div className="px-4 py-3 bg-primary/5 border-b flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-sm">
+          <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
@@ -185,9 +185,9 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 bg-muted/30 p-4">
-        <div className="space-y-1">
+      {/* Messages - WhatsApp style background pattern */}
+      <ScrollArea className="flex-1 bg-[#efeae2] dark:bg-[#0b141a] p-3">
+        <div className="space-y-2">
           {messages.map((message, index) => {
             const isCurrentUser = message.senderId === currentUserId;
             const isAdmin = message.senderRole === "admin";
@@ -196,66 +196,124 @@ export function ChatInterface({
             return (
               <div key={message.id}>
                 {showDateLabel && (
-                  <div className="flex items-center justify-center my-4">
-                    <div className="bg-background px-3 py-1 rounded-full text-xs text-muted-foreground shadow-sm">
+                  <div className="flex items-center justify-center my-3">
+                    <div className="bg-white/90 dark:bg-[#202c33] px-3 py-1 rounded-md text-xs font-medium text-foreground/80 shadow-sm">
                       {formatDateLabel(message.createdAt)}
                     </div>
                   </div>
                 )}
                 
-                <div
-                  className={`flex gap-2 mb-1 ${isCurrentUser ? "flex-row-reverse" : ""}`}
-                  data-testid={`message-${message.id}`}
-                >
-                  {!isCurrentUser && (
-                    <Avatar className="h-8 w-8 mt-1">
-                      <AvatarFallback className={`text-xs ${isAdmin ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                        {getInitials(message.senderName)}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  
-                  <div className={`flex flex-col max-w-[75%] ${isCurrentUser ? "items-end" : "items-start"}`}>
-                    {!isCurrentUser && (
-                      <span className={`text-xs font-medium mb-1 px-1 ${isAdmin ? "text-primary" : "text-foreground"}`}>
-                        {message.senderName || "Unknown User"}
-                        {isAdmin && " (Admin)"}
-                      </span>
-                    )}
-                    
-                    <div
-                      className={`rounded-lg px-3 py-2 shadow-sm ${
-                        isCurrentUser
-                          ? "bg-primary text-primary-foreground"
-                          : isAdmin
-                          ? "bg-primary/10 border-2 border-primary/30"
-                          : "bg-card border"
-                      }`}
-                    >
+                {/* Admin announcement style - centered and full width */}
+                {isAdmin && !isCurrentUser ? (
+                  <div className="flex justify-center my-3" data-testid={`message-${message.id}`}>
+                    <div className="max-w-[85%] bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/40 dark:to-yellow-950/40 border-2 border-amber-200 dark:border-amber-800 rounded-lg p-3 shadow-md">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarFallback className="bg-amber-500 text-white text-xs font-bold">
+                            {getInitials(message.senderName)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                            {message.senderName || "Admin"}
+                          </span>
+                          <span className="text-[10px] font-semibold bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 px-1.5 py-0.5 rounded-full">
+                            ADMIN
+                          </span>
+                        </div>
+                      </div>
                       {message.type === "image" ? (
                         <div className="relative">
                           <img 
                             src={message.content} 
                             alt="Shared" 
-                            className="max-w-[250px] max-h-[250px] rounded-md object-cover"
+                            className="max-w-full max-h-[300px] rounded-md object-cover shadow-sm"
                             loading="lazy"
                           />
+                          <div className="flex items-center justify-end gap-1 mt-1.5">
+                            <span className="text-[10px] text-amber-700 dark:text-amber-300">
+                              {formatTime(message.createdAt)}
+                            </span>
+                          </div>
                         </div>
                       ) : (
-                        <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
+                        <div>
+                          <p className="text-sm text-foreground font-medium break-words whitespace-pre-wrap leading-relaxed">
+                            {message.content}
+                          </p>
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            <span className="text-[10px] text-amber-700 dark:text-amber-300">
+                              {formatTime(message.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Regular messages - WhatsApp bubble style */
+                  <div
+                    className={`flex gap-2 ${isCurrentUser ? "flex-row-reverse" : ""}`}
+                    data-testid={`message-${message.id}`}
+                  >
+                    {!isCurrentUser && (
+                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                        <AvatarFallback className="bg-primary/80 text-primary-foreground text-xs">
+                          {getInitials(message.senderName)}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    
+                    <div className={`flex flex-col max-w-[75%] ${isCurrentUser ? "items-end" : "items-start"}`}>
+                      {!isCurrentUser && (
+                        <span className="text-xs font-semibold mb-0.5 px-2 text-primary">
+                          {message.senderName || "Unknown User"}
+                        </span>
                       )}
                       
-                      <div className={`flex items-center gap-1 mt-1 ${isCurrentUser ? "justify-end" : "justify-start"}`}>
-                        <span className={`text-[10px] ${isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                          {formatTime(message.createdAt)}
-                        </span>
-                        {isCurrentUser && (
-                          <CheckCheck className={`h-3 w-3 ${isCurrentUser ? "text-primary-foreground/70" : "text-muted-foreground"}`} />
+                      <div
+                        className={`rounded-lg shadow-md ${
+                          isCurrentUser
+                            ? "bg-[#d9fdd3] dark:bg-[#005c4b] rounded-tr-none"
+                            : "bg-white dark:bg-[#202c33] rounded-tl-none"
+                        }`}
+                      >
+                        {message.type === "image" ? (
+                          <div className="p-1">
+                            <img 
+                              src={message.content} 
+                              alt="Shared" 
+                              className="max-w-[280px] max-h-[280px] rounded-md object-cover"
+                              loading="lazy"
+                            />
+                            <div className={`flex items-center gap-1 px-2 pb-1 pt-0.5 ${isCurrentUser ? "justify-end" : "justify-end"}`}>
+                              <span className={`text-[10px] ${isCurrentUser ? "text-[#667781] dark:text-[#8696a0]" : "text-muted-foreground"}`}>
+                                {formatTime(message.createdAt)}
+                              </span>
+                              {isCurrentUser && (
+                                <CheckCheck className="h-3 w-3 text-[#53bdeb]" />
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="px-3 py-2">
+                            <p className={`text-sm break-words whitespace-pre-wrap ${isCurrentUser ? "text-[#111b21] dark:text-white" : "text-foreground"}`}>
+                              {message.content}
+                            </p>
+                            <div className={`flex items-center gap-1 mt-1 ${isCurrentUser ? "justify-end" : "justify-end"}`}>
+                              <span className={`text-[10px] ${isCurrentUser ? "text-[#667781] dark:text-[#8696a0]" : "text-muted-foreground"}`}>
+                                {formatTime(message.createdAt)}
+                              </span>
+                              {isCurrentUser && (
+                                <CheckCheck className="h-3 w-3 text-[#53bdeb]" />
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
@@ -265,33 +323,34 @@ export function ChatInterface({
 
       {/* Image Preview */}
       {selectedImage && (
-        <div className="px-4 py-2 border-t bg-card flex items-center gap-2">
+        <div className="px-4 py-3 border-t bg-card flex items-center gap-3 shadow-sm">
           <div className="relative">
             <img 
               src={selectedImage} 
               alt="Preview" 
-              className="w-16 h-16 rounded-md object-cover border"
+              className="w-16 h-16 rounded-md object-cover border-2 border-primary/20"
             />
             <Button
               size="icon"
               variant="destructive"
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
+              className="absolute -top-2 -right-2 h-5 w-5 rounded-full shadow-md"
               onClick={() => {
                 setSelectedImage(null);
                 if (fileInputRef.current) {
                   fileInputRef.current.value = "";
                 }
               }}
+              data-testid="button-remove-image"
             >
               <X className="h-3 w-3" />
             </Button>
           </div>
-          <span className="text-sm text-muted-foreground">Image ready to send</span>
+          <span className="text-sm text-muted-foreground font-medium">Image ready to send</span>
         </div>
       )}
       
-      {/* Input */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t bg-card">
+      {/* Input - WhatsApp style */}
+      <form onSubmit={handleSendMessage} className="p-3 bg-card border-t">
         <div className="flex gap-2 items-center">
           <input
             ref={fileInputRef}
@@ -308,7 +367,7 @@ export function ChatInterface({
             data-testid="button-upload-image"
             onClick={() => fileInputRef.current?.click()}
             disabled={!ws || !!selectedImage}
-            className="hover-elevate"
+            className="hover-elevate flex-shrink-0"
           >
             <ImageIcon className="h-5 w-5" />
           </Button>
@@ -318,14 +377,14 @@ export function ChatInterface({
             placeholder="Type a message..."
             data-testid="input-message"
             disabled={!ws || !!selectedImage}
-            className="flex-1 bg-background"
+            className="flex-1 bg-background rounded-full border-muted-foreground/20"
           />
           <Button 
             type="submit" 
             size="icon" 
             data-testid="button-send-message"
             disabled={!ws || (!newMessage.trim() && !selectedImage)}
-            className="hover-elevate active-elevate-2"
+            className="hover-elevate active-elevate-2 flex-shrink-0 rounded-full bg-primary"
           >
             <Send className="h-5 w-5" />
           </Button>
