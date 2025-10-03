@@ -696,5 +696,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Crate Daily Balance endpoints
+  app.get("/api/crates/daily", requireAuth, async (req, res) => {
+    try {
+      const { routeIds, startDate, endDate } = req.query;
+      
+      if (!routeIds || !startDate || !endDate) {
+        return res.status(400).json({ message: "routeIds, startDate, and endDate are required" });
+      }
+
+      const routeIdArray = Array.isArray(routeIds) ? routeIds : [routeIds];
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+
+      const balances = await storage.getDailyBalancesByDateRange(
+        routeIdArray as string[],
+        start,
+        end
+      );
+
+      res.json(balances);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to fetch daily balances" });
+    }
+  });
+
+  app.post("/api/crates/adjust", requireAuth, async (req, res) => {
+    try {
+      const { routeId, date, delta, remarks } = req.body;
+      
+      if (!routeId || !date || delta === undefined) {
+        return res.status(400).json({ message: "routeId, date, and delta are required" });
+      }
+
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const adjustedBalance = await storage.adjustCrateCount(
+        routeId,
+        new Date(date),
+        delta,
+        req.session.userId,
+        remarks
+      );
+
+      res.json(adjustedBalance);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to adjust crate count" });
+    }
+  });
+
   return httpServer;
 }
