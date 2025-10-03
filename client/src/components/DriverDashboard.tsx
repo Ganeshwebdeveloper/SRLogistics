@@ -4,8 +4,9 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Square, MapPin, Clock, Gauge } from "lucide-react";
+import { Play, Square, MapPin, Clock, Gauge, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface DriverDashboardProps {
   driverName?: string;
@@ -37,6 +38,7 @@ export function DriverDashboard({
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
   const watchIdRef = useRef<number | null>(null);
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -177,11 +179,14 @@ export function DriverDashboard({
       if (!tripId) throw new Error("No trip ID provided");
       if (!currentLocation) throw new Error("GPS location not available");
       
+      const now = new Date();
+      console.log("Starting trip with timestamp:", now.toISOString());
+      
       const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
         status: "ongoing",
-        startTime: new Date(),
-        startLatitude: currentLocation.latitude,
-        startLongitude: currentLocation.longitude,
+        startTime: now.toISOString(),
+        startLatitude: String(currentLocation.latitude),
+        startLongitude: String(currentLocation.longitude),
       });
       return response.json();
     },
@@ -211,12 +216,12 @@ export function DriverDashboard({
       if (!tripId) throw new Error("No trip ID provided");
       const response = await apiRequest("PATCH", `/api/trips/${tripId}`, {
         status: "completed",
-        endTime: new Date(),
-        distanceTravelled: distance.toFixed(2),
-        avgSpeed: speed.toFixed(2),
+        endTime: new Date().toISOString(),
+        distanceTravelled: String(distance.toFixed(2)),
+        avgSpeed: String(speed.toFixed(2)),
         ...(currentLocation && {
-          endLatitude: currentLocation.latitude,
-          endLongitude: currentLocation.longitude,
+          endLatitude: String(currentLocation.latitude),
+          endLongitude: String(currentLocation.longitude),
         }),
       });
       return response.json();
@@ -270,21 +275,59 @@ export function DriverDashboard({
     endTripMutation.mutate();
   };
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/auth/logout");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.clear();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully",
+      });
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: error.message,
+      });
+    },
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <Card className="gradient-card-blue hover-lift shadow-xl overflow-hidden">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="text-3xl font-bold text-white/90">Welcome, {driverName}</CardTitle>
               <CardDescription className="text-base mt-1 text-white/70">Your current trip assignment</CardDescription>
             </div>
-            <Badge 
-              variant={tripStatus === "ongoing" ? "success" : tripStatus === "completed" ? "info" : "warning"}
-              className="px-4 py-2 text-sm font-semibold shadow-lg animate-pulse-subtle"
-            >
-              {tripStatus === "ongoing" ? "Active" : tripStatus === "completed" ? "Completed" : "Not Started"}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge 
+                variant={tripStatus === "ongoing" ? "success" : tripStatus === "completed" ? "info" : "warning"}
+                className="px-4 py-2 text-sm font-semibold shadow-lg animate-pulse-subtle"
+              >
+                {tripStatus === "ongoing" ? "Active" : tripStatus === "completed" ? "Completed" : "Not Started"}
+              </Badge>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+                className="bg-white/10 border-white/20 hover:bg-white/20 text-white"
+                data-testid="button-logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6 pt-6">
