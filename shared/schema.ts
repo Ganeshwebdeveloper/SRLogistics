@@ -119,4 +119,5 @@ export type Message = typeof messages.$inferSelect;
 
 export type MessageWithSender = Message & {
   senderName: string | null;
+  senderRole: string | null;
 };

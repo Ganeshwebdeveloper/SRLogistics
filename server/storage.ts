@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -74,6 +74,7 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   getAllMessages(): Promise<MessageWithSender[]>;
   deleteMessage(id: string): Promise<boolean>;
+  deleteOldImageMessages(hours: number): Promise<number>;
 }
 
 export class DbStorage implements IStorage {
@@ -252,6 +253,7 @@ export class DbStorage implements IStorage {
         id: schema.messages.id,
         senderId: schema.messages.senderId,
         senderName: schema.users.name,
+        senderRole: schema.users.role,
         content: schema.messages.content,
         type: schema.messages.type,
         createdAt: schema.messages.createdAt,
@@ -261,6 +263,23 @@ export class DbStorage implements IStorage {
       .orderBy(schema.messages.createdAt);
     
     return messages as MessageWithSender[];
+  }
+  
+  async deleteOldImageMessages(hours: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setHours(cutoffDate.getHours() - hours);
+    
+    const result = await db
+      .delete(schema.messages)
+      .where(
+        and(
+          eq(schema.messages.type, "image"),
+          lt(schema.messages.createdAt, cutoffDate)
+        )
+      )
+      .returning();
+    
+    return result.length;
   }
 
   async deleteMessage(id: string): Promise<boolean> {
