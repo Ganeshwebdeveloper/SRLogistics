@@ -21,6 +21,19 @@ interface DashboardViewProps {
   userName: string;
 }
 
+const DEFAULT_LOCATION: [number, number] = [40.7128, -74.0060];
+
+const TRUCK_COLORS = [
+  "#3b82f6",
+  "#ef4444",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+];
+
 export function DashboardView({ userId, userName }: DashboardViewProps) {
   const { data: trips = [] } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
@@ -45,17 +58,35 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
     .reduce((sum, trip) => sum + parseFloat(trip.distanceTravelled || "0"), 0)
     .toFixed(1);
 
+  const getColorForTruck = (truckNumber: string) => {
+    const index = trucks.findIndex((t) => t.truckNumber === truckNumber);
+    return TRUCK_COLORS[index % TRUCK_COLORS.length];
+  };
+
   const driversWithLocations = ongoingTrips.map((trip) => {
     const driver = drivers.find((d) => d.id === trip.driverId);
     const truck = trucks.find((t) => t.id === trip.truckId);
+    const truckNumber = truck?.truckNumber || "Unknown";
+    
+    let position: [number, number] = DEFAULT_LOCATION;
+    
+    if (trip.currentLocation) {
+      try {
+        const location = JSON.parse(trip.currentLocation);
+        if (location.latitude && location.longitude) {
+          position = [location.latitude, location.longitude];
+        }
+      } catch (error) {
+        console.error(`Failed to parse currentLocation for trip ${trip.id}:`, error);
+      }
+    }
+    
     return {
       id: trip.id,
       name: driver?.name || "Unknown Driver",
-      position: [40.7128 + Math.random() * 0.1, -74.006 + Math.random() * 0.1] as [
-        number,
-        number
-      ],
-      truckNumber: truck?.truckNumber || "Unknown",
+      position,
+      truckNumber,
+      color: getColorForTruck(truckNumber),
     };
   });
 
