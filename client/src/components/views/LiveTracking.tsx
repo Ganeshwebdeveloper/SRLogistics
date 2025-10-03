@@ -69,6 +69,34 @@ export function LiveTracking() {
   });
 
   useEffect(() => {
+    if (trips.length > 0) {
+      const initialLocations = new Map<string, GpsLocation>();
+      trips.forEach((trip) => {
+        if (trip.currentLocation && trip.status === "ongoing") {
+          try {
+            const location = JSON.parse(trip.currentLocation);
+            if (location.latitude && location.longitude) {
+              initialLocations.set(trip.id, {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                timestamp: location.timestamp || new Date().toISOString(),
+              });
+              console.log(`🗺️ Loaded persisted location for trip ${trip.id}:`, location);
+            }
+          } catch (error) {
+            console.error(`Failed to parse currentLocation for trip ${trip.id}:`, error);
+          }
+        }
+      });
+      
+      if (initialLocations.size > 0) {
+        setGpsLocations(initialLocations);
+        console.log(`📍 Initialized ${initialLocations.size} GPS locations from database`);
+      }
+    }
+  }, [trips]);
+
+  useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
     const socket = new WebSocket(wsUrl);
