@@ -13,6 +13,7 @@ import { LiveTracking } from "@/components/views/LiveTracking";
 import { CratesView } from "@/components/views/CratesView";
 import { GroupChatView } from "@/components/views/GroupChatView";
 import { TripsManagement } from "@/components/views/TripsManagement";
+import { DriverSalaryView } from "@/components/views/DriverSalaryView";
 
 interface AdminDashboardPageProps {
   user: User;
@@ -40,6 +41,8 @@ export default function AdminDashboardPage({ user, onLogout }: AdminDashboardPag
         return <GroupChatView userId={user.id} userName={user.name} />;
       case "trips":
         return <TripsManagement />;
+      case "salary":
+        return <DriverSalaryView />;
       default:
         return <DashboardView userId={user.id} userName={user.name} />;
     }

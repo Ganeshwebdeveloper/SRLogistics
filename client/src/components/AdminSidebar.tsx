@@ -9,11 +9,12 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { Truck, LayoutDashboard, MapPin, Package, MessageSquare, List } from "lucide-react";
+import { Truck, LayoutDashboard, MapPin, Package, MessageSquare, List, IndianRupee } from "lucide-react";
 
 const menuItems = [
   { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
   { title: "Trips", icon: List, id: "trips" },
+  { title: "Driver Salary", icon: IndianRupee, id: "salary" },
   { title: "Fleet Management", icon: Truck, id: "fleet" },
   { title: "Live Tracking", icon: MapPin, id: "tracking" },
   { title: "Crates", icon: Package, id: "crates" },

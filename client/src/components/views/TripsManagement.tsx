@@ -35,9 +35,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, PlayCircle, CheckCircle } from "lucide-react";
+import { Edit, Trash2, PlayCircle, CheckCircle, FileDown, FileSpreadsheet } from "lucide-react";
 import type { Trip, User, Truck as TruckType, Route } from "@shared/schema";
 import { format, parseISO } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -286,6 +289,98 @@ export function TripsManagement() {
     updateTripMutation.mutate(data);
   };
 
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("Trips Report", 14, 22);
+    
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${format(new Date(), "MMM dd, yyyy HH:mm")}`, 14, 30);
+    
+    if (selectedMonth !== "all") {
+      doc.text(`Month: ${format(parseISO(`${selectedMonth}-01`), "MMMM yyyy")}`, 14, 36);
+    }
+    if (statusFilter !== "all") {
+      doc.text(`Status: ${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}`, 14, 42);
+    }
+    
+    const tableData = sortedTrips.map((trip) => [
+      getDriver(trip.driverId),
+      getTruck(trip.truckId),
+      getRoute(trip.routeId),
+      trip.startTime ? format(parseISO(typeof trip.startTime === 'string' ? trip.startTime : trip.startTime.toISOString()), "MMM dd, yyyy HH:mm") : "Not started",
+      trip.status.charAt(0).toUpperCase() + trip.status.slice(1),
+      `${trip.distanceTravelled || "0"} km`,
+      `₹${trip.rupees}`,
+    ]);
+    
+    autoTable(doc, {
+      startY: selectedMonth !== "all" || statusFilter !== "all" ? 48 : 36,
+      head: [["Driver", "Truck", "Route", "Start Time", "Status", "Distance", "Payment"]],
+      body: tableData,
+      theme: "grid",
+      headStyles: { fillColor: [37, 99, 235], textColor: 255 },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 25 },
+      },
+    });
+    
+    doc.save(`trips_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    
+    toast({
+      title: "PDF Downloaded",
+      description: "Trips report has been downloaded successfully.",
+    });
+  };
+
+  const handleDownloadExcel = () => {
+    const worksheetData = [
+      ["Trips Report"],
+      [`Generated on: ${format(new Date(), "MMM dd, yyyy HH:mm")}`],
+      [],
+      ["Driver", "Truck", "Route", "Start Time", "Status", "Distance (km)", "Payment (₹)"],
+      ...sortedTrips.map((trip) => [
+        getDriver(trip.driverId),
+        getTruck(trip.truckId),
+        getRoute(trip.routeId),
+        trip.startTime ? format(parseISO(typeof trip.startTime === 'string' ? trip.startTime : trip.startTime.toISOString()), "MMM dd, yyyy HH:mm") : "Not started",
+        trip.status.charAt(0).toUpperCase() + trip.status.slice(1),
+        trip.distanceTravelled || "0",
+        trip.rupees,
+      ]),
+    ];
+    
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    
+    worksheet["!cols"] = [
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 15 },
+    ];
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Trips");
+    
+    XLSX.writeFile(workbook, `trips_report_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    
+    toast({
+      title: "Excel Downloaded",
+      description: "Trips report has been downloaded successfully.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -363,7 +458,7 @@ export function TripsManagement() {
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -377,6 +472,26 @@ export function TripsManagement() {
               className="text-white border-white/30 hover:bg-white/20"
             >
               Reset Filters
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadPDF}
+              data-testid="button-download-pdf"
+              className="text-white border-white/30 hover:bg-white/20"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadExcel}
+              data-testid="button-download-excel"
+              className="text-white border-white/30 hover:bg-white/20"
+            >
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Download Excel
             </Button>
             <span className="text-sm text-white/70">
               Showing {sortedTrips.length} of {trips.length} trips
