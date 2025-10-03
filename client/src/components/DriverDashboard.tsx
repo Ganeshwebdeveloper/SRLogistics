@@ -17,6 +17,7 @@ interface DriverDashboardProps {
   };
   tripId?: string;
   driverId?: string;
+  onLogout?: () => void;
 }
 
 export function DriverDashboard({ 
@@ -27,7 +28,8 @@ export function DriverDashboard({
     status: "not-started",
   },
   tripId,
-  driverId
+  driverId,
+  onLogout
 }: DriverDashboardProps) {
   const [tripStatus, setTripStatus] = useState<"ongoing" | "not-started" | "completed">(
     assignedTrip.status
@@ -374,7 +376,11 @@ export function DriverDashboard({
         title: "Logged out",
         description: "You have been logged out successfully",
       });
-      setLocation("/");
+      if (onLogout) {
+        onLogout();
+      } else {
+        setLocation("/");
+      }
     },
     onError: (error: Error) => {
       toast({
