@@ -557,17 +557,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/trips/:id", requireAuth, async (req, res) => {
     try {
-      console.log("PATCH /api/trips/:id called");
-      console.log("Trip ID:", req.params.id);
-      console.log("Request body:", JSON.stringify(req.body, null, 2));
-      console.log("Body types:", {
-        status: typeof req.body.status,
-        startTime: typeof req.body.startTime,
-        startLatitude: typeof req.body.startLatitude,
-        startLongitude: typeof req.body.startLongitude,
-      });
+      // Convert timestamp strings to Date objects for Drizzle
+      const updateData = { ...req.body };
+      if (updateData.startTime && typeof updateData.startTime === 'string') {
+        updateData.startTime = new Date(updateData.startTime);
+      }
+      if (updateData.endTime && typeof updateData.endTime === 'string') {
+        updateData.endTime = new Date(updateData.endTime);
+      }
       
-      const trip = await storage.updateTrip(req.params.id, req.body);
+      const trip = await storage.updateTrip(req.params.id, updateData);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
       }
