@@ -57,6 +57,7 @@ import { z } from "zod";
 
 export function FleetManagement() {
   const [addRouteDialogOpen, setAddRouteDialogOpen] = useState(false);
+  const [addDriverDialogOpen, setAddDriverDialogOpen] = useState(false);
   const [editTruckDialogOpen, setEditTruckDialogOpen] = useState(false);
   const [editDriverDialogOpen, setEditDriverDialogOpen] = useState(false);
   const [editRouteDialogOpen, setEditRouteDialogOpen] = useState(false);
@@ -101,6 +102,21 @@ export function FleetManagement() {
     },
   });
 
+  const addDriverSchema = insertUserSchema.extend({
+    password: z.string().min(6, "Password must be at least 6 characters"),
+  });
+
+  const addDriverForm = useForm<z.infer<typeof addDriverSchema>>({
+    resolver: zodResolver(addDriverSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      role: "driver",
+      status: "available",
+    },
+  });
+
   const updateTruckSchema = z.object({
     truckNumber: z.string().min(1, "Truck number is required"),
     capacity: z.number().min(1, "Capacity must be at least 1"),
@@ -137,6 +153,29 @@ export function FleetManagement() {
       toast({
         title: "Success",
         description: "Route created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createDriverMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof addDriverSchema>) => {
+      const res = await apiRequest("POST", "/api/auth/register", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] });
+      addDriverForm.reset();
+      setAddDriverDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Driver added successfully",
       });
     },
     onError: (error: Error) => {
@@ -291,6 +330,10 @@ export function FleetManagement() {
 
   const onAddRouteSubmit = (data: InsertRoute) => {
     createRouteMutation.mutate(data);
+  };
+
+  const onAddDriverSubmit = (data: z.infer<typeof addDriverSchema>) => {
+    createDriverMutation.mutate(data);
   };
 
   const onEditTruckSubmit = (data: z.infer<typeof updateTruckSchema>) => {
