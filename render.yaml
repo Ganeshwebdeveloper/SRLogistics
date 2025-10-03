@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: sr-logistics
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sr-logistics-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+    healthCheckPath: /
+
+databases:
+  - name: sr-logistics-db
+    databaseName: sr_logistics
+    plan: free
