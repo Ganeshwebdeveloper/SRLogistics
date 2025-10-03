@@ -557,7 +557,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/trips/:id", requireAuth, async (req, res) => {
     try {
-      console.log("Updating trip:", req.params.id, "with data:", req.body);
+      console.log("PATCH /api/trips/:id called");
+      console.log("Trip ID:", req.params.id);
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("Body types:", {
+        status: typeof req.body.status,
+        startTime: typeof req.body.startTime,
+        startLatitude: typeof req.body.startLatitude,
+        startLongitude: typeof req.body.startLongitude,
+      });
+      
       const trip = await storage.updateTrip(req.params.id, req.body);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
