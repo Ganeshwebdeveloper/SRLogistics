@@ -112,4 +112,22 @@ app.use((req, res, next) => {
   
   // Also run cleanup on startup
   cleanupOldPhotos();
+
+  // Schedule cleanup for messages older than 2 weeks
+  const cleanupOldMessages = async () => {
+    try {
+      const deletedCount = await storage.deleteOldMessages(14);
+      if (deletedCount > 0) {
+        log(`Deleted ${deletedCount} messages older than 2 weeks`);
+      }
+    } catch (error) {
+      console.error("Error cleaning up old messages:", error);
+    }
+  };
+
+  // Run cleanup once a day (24 hours)
+  setInterval(cleanupOldMessages, 24 * 60 * 60 * 1000);
+  
+  // Also run cleanup on startup
+  cleanupOldMessages();
 })();

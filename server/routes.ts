@@ -747,5 +747,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/crates/set", requireAuth, async (req, res) => {
+    try {
+      const schema = z.object({
+        routeId: z.string().min(1, "Route ID is required"),
+        date: z.string().min(1, "Date is required"),
+        count: z.number().int().min(0, "Count must be a non-negative integer"),
+        remarks: z.string().optional(),
+      });
+
+      const data = schema.parse(req.body);
+
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const balance = await storage.setCrateCount(
+        data.routeId,
+        new Date(data.date),
+        data.count,
+        req.session.userId,
+        data.remarks
+      );
+
+      res.json(balance);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to set crate count" });
+    }
+  });
+
   return httpServer;
 }

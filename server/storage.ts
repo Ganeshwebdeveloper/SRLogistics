@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and, lt, gte, lte, between, desc, sql as sqlQuery } from "drizzle-orm";
+import { eq, and, lt, gte, lte, between, desc, inArray, sql as sqlQuery } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -80,6 +80,7 @@ export interface IStorage {
   getAllMessages(): Promise<MessageWithSender[]>;
   deleteMessage(id: string): Promise<boolean>;
   deleteOldImageMessages(hours: number): Promise<number>;
+  deleteOldMessages(days: number): Promise<number>;
   
   // Crate Daily Balance operations
   getDailyBalance(routeId: string, date: Date): Promise<CrateDailyBalance | undefined>;
@@ -92,6 +93,9 @@ export interface IStorage {
   
   // Combined operation for adjusting crate count
   adjustCrateCount(routeId: string, date: Date, delta: number, actorId: string, remarks?: string): Promise<CrateDailyBalance>;
+  
+  // Set exact crate count value
+  setCrateCount(routeId: string, date: Date, count: number, actorId: string, remarks?: string): Promise<CrateDailyBalance>;
 }
 
 export class DbStorage implements IStorage {
@@ -299,6 +303,18 @@ export class DbStorage implements IStorage {
     return result.length;
   }
 
+  async deleteOldMessages(days: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    const result = await db
+      .delete(schema.messages)
+      .where(lt(schema.messages.createdAt, cutoffDate))
+      .returning();
+    
+    return result.length;
+  }
+
   async deleteMessage(id: string): Promise<boolean> {
     const result = await db.delete(schema.messages).where(eq(schema.messages.id, id)).returning();
     return result.length > 0;
@@ -346,7 +362,7 @@ export class DbStorage implements IStorage {
       .leftJoin(schema.routes, eq(schema.crateDailyBalances.routeId, schema.routes.id))
       .where(
         and(
-          sqlQuery`${schema.crateDailyBalances.routeId} = ANY(${routeIds})`,
+          inArray(schema.crateDailyBalances.routeId, routeIds),
           gte(schema.crateDailyBalances.date, startDate),
           lte(schema.crateDailyBalances.date, endDate)
         )
@@ -430,6 +446,50 @@ export class DbStorage implements IStorage {
       actorId,
       remarks: remarks || null,
     });
+
+    return balance;
+  }
+
+  // Set exact crate count value
+  async setCrateCount(
+    routeId: string,
+    date: Date,
+    count: number,
+    actorId: string,
+    remarks?: string
+  ): Promise<CrateDailyBalance> {
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+
+    const existingBalance = await this.getDailyBalance(routeId, normalizedDate);
+    
+    let openingCount: number;
+    let delta: number;
+    
+    if (existingBalance) {
+      openingCount = existingBalance.openingCount;
+      delta = count - existingBalance.closingCount;
+    } else {
+      const route = await this.getRoute(routeId);
+      openingCount = route?.crateCount || 100;
+      delta = count - openingCount;
+    }
+
+    const balance = await this.createOrUpdateDailyBalance({
+      routeId,
+      date: normalizedDate,
+      openingCount,
+      closingCount: count,
+    });
+
+    if (delta !== 0) {
+      await this.createAdjustment({
+        dailyBalanceId: balance.id,
+        delta,
+        actorId,
+        remarks: remarks || null,
+      });
+    }
 
     return balance;
   }

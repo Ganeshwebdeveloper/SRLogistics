@@ -34,6 +34,7 @@ export function CratesView() {
     const weekLater = addDays(today, 6);
     return format(weekLater, "yyyy-MM-dd");
   });
+  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
 
   const { data: routes = [], isLoading: routesLoading } = useQuery<Route[]>({
     queryKey: ["/api/routes"],
@@ -91,6 +92,41 @@ export function CratesView() {
     },
   });
 
+  const setCrateMutation = useMutation({
+    mutationFn: async ({
+      routeId,
+      date,
+      count,
+    }: {
+      routeId: string;
+      date: string;
+      count: number;
+    }) => {
+      const response = await apiRequest("POST", "/api/crates/set", {
+        routeId,
+        date: new Date(date).toISOString(),
+        count,
+      });
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/crates/daily"] });
+      const key = `${variables.routeId}-${variables.date}`;
+      setEditingValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[key];
+        return newValues;
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to set crate count",
+        variant: "destructive",
+      });
+    },
+  });
+
   const dateRange = useMemo(() => {
     const dates: Date[] = [];
     const start = startOfDay(new Date(startDate));
@@ -131,6 +167,14 @@ export function CratesView() {
       routeId,
       date: format(date, "yyyy-MM-dd"),
       delta,
+    });
+  };
+
+  const handleSetCount = (routeId: string, date: Date, count: number) => {
+    setCrateMutation.mutate({
+      routeId,
+      date: format(date, "yyyy-MM-dd"),
+      count,
     });
   };
 
@@ -249,13 +293,42 @@ export function CratesView() {
                         {dateRange.map((date) => {
                           const dayBalance = getBalanceForRouteAndDate(route.id, date);
                           const count = dayBalance?.closingCount ?? route.crateCount;
+                          const dateKey = format(date, "yyyy-MM-dd");
+                          const inputKey = `${route.id}-${dateKey}`;
+                          const displayValue = editingValues[inputKey] !== undefined ? editingValues[inputKey] : count.toString();
                           
                           return (
                             <TableCell key={date.toISOString()} className="text-center p-2">
                               <div className="flex flex-col items-center gap-1">
-                                <div className="text-lg font-bold text-foreground" data-testid={`count-${route.id}-${format(date, "yyyy-MM-dd")}`}>
-                                  {count}
-                                </div>
+                                <Input
+                                  type="number"
+                                  value={displayValue}
+                                  onChange={(e) => {
+                                    setEditingValues(prev => ({
+                                      ...prev,
+                                      [inputKey]: e.target.value
+                                    }));
+                                  }}
+                                  onBlur={(e) => {
+                                    const newValue = parseInt(e.target.value, 10);
+                                    if (!isNaN(newValue) && newValue >= 0 && newValue !== count) {
+                                      handleSetCount(route.id, date, newValue);
+                                    } else {
+                                      setEditingValues(prev => {
+                                        const newValues = { ...prev };
+                                        delete newValues[inputKey];
+                                        return newValues;
+                                      });
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.currentTarget.blur();
+                                    }
+                                  }}
+                                  className="h-8 w-20 text-center text-lg font-bold"
+                                  data-testid={`input-count-${route.id}-${dateKey}`}
+                                />
                                 <div className="flex gap-1">
                                   <Button
                                     size="icon"
@@ -263,7 +336,7 @@ export function CratesView() {
                                     className="h-7 w-7"
                                     onClick={() => handleAdjust(route.id, date, 1)}
                                     disabled={adjustCrateMutation.isPending}
-                                    data-testid={`button-plus-${route.id}-${format(date, "yyyy-MM-dd")}`}
+                                    data-testid={`button-plus-${route.id}-${dateKey}`}
                                   >
                                     <Plus className="h-3 w-3" />
                                   </Button>
@@ -273,7 +346,7 @@ export function CratesView() {
                                     className="h-7 w-7"
                                     onClick={() => handleAdjust(route.id, date, -1)}
                                     disabled={adjustCrateMutation.isPending}
-                                    data-testid={`button-minus-${route.id}-${format(date, "yyyy-MM-dd")}`}
+                                    data-testid={`button-minus-${route.id}-${dateKey}`}
                                   >
                                     <Minus className="h-3 w-3" />
                                   </Button>
