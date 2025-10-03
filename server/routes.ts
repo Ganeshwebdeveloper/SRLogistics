@@ -557,6 +557,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/trips/:id", requireAuth, async (req, res) => {
     try {
+      console.log("Updating trip:", req.params.id, "with data:", req.body);
       const trip = await storage.updateTrip(req.params.id, req.body);
       if (!trip) {
         return res.status(404).json({ message: "Trip not found" });
@@ -575,6 +576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(trip);
     } catch (error) {
+      console.error("Error updating trip:", error);
       res.status(500).json({ message: error instanceof Error ? error.message : "Failed to update trip" });
     }
   });
