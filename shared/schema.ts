@@ -121,3 +121,47 @@ export type MessageWithSender = Message & {
   senderName: string | null;
   senderRole: string | null;
 };
+
+// Crate Daily Balances table - tracks daily opening/closing counts per route
+export const crateDailyBalances = pgTable("crate_daily_balances", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  routeId: varchar("route_id").notNull().references(() => routes.id),
+  date: timestamp("date").notNull(),
+  openingCount: integer("opening_count").notNull(),
+  closingCount: integer("closing_count").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  uniqueRouteDate: sql`UNIQUE (route_id, date)`,
+}));
+
+export const insertCrateDailyBalanceSchema = createInsertSchema(crateDailyBalances).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCrateDailyBalance = z.infer<typeof insertCrateDailyBalanceSchema>;
+export type CrateDailyBalance = typeof crateDailyBalances.$inferSelect;
+
+// Crate Adjustments table - audit trail for all crate count changes
+export const crateAdjustments = pgTable("crate_adjustments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  dailyBalanceId: varchar("daily_balance_id").notNull().references(() => crateDailyBalances.id),
+  delta: integer("delta").notNull(),
+  actorId: varchar("actor_id").notNull().references(() => users.id),
+  remarks: text("remarks"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCrateAdjustmentSchema = createInsertSchema(crateAdjustments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCrateAdjustment = z.infer<typeof insertCrateAdjustmentSchema>;
+export type CrateAdjustment = typeof crateAdjustments.$inferSelect;
+
+export type DailyBalanceWithRoute = CrateDailyBalance & {
+  routeName: string | null;
+};
