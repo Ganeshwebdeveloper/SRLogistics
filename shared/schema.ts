@@ -118,5 +118,5 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 
 export type MessageWithSender = Message & {
-  senderName: string;
+  senderName: string | null;
 };

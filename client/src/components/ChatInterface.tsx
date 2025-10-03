@@ -88,7 +88,8 @@ export function ChatInterface({
     setNewMessage("");
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "?";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -143,7 +144,7 @@ export function ChatInterface({
                   </Avatar>
                   <div className={`flex-1 ${isCurrentUser ? "items-end" : ""}`}>
                     <div className={`flex items-baseline gap-2 mb-1 ${isCurrentUser ? "flex-row-reverse" : ""}`}>
-                      <span className="text-sm font-medium text-white/90">{message.senderName}</span>
+                      <span className="text-sm font-medium text-white/90">{message.senderName || "Unknown User"}</span>
                       <span className="text-xs text-white/60">
                         {formatTime(message.createdAt)}
                       </span>
