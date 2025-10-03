@@ -1,0 +1,40 @@
+The above error occurred in the <ChatInterface> component:
+
+    at ChatInterface (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/src/components/ChatInterface.tsx:27:3)
+    at div
+    at div
+    at main
+    at div
+    at DriverPage (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/src/pages/DriverPage.tsx:24:38)
+    at Route (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9c444b6e:323:16)
+    at Switch (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9c444b6e:379:17)
+    at Router (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/src/App.tsx?v=AA2qa6ynUj6g6Msjq3lr2:30:27)
+    at Provider (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=9c444b6e:38:15)
+    at TooltipProvider (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9c444b6e:60:5)
+    at QueryClientProvider (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9c444b6e:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+at ChatInterface (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/src/components/ChatInterface.tsx:27:3)
+at div
+at div
+at main
+at div
+at DriverPage (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/src/pages/DriverPage.tsx:24:38)
+at Route (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9c444b6e:323:16)
+at Switch (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9c444b6e:379:17)
+at Router (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/src/App.tsx?v=AA2qa6ynUj6g6Msjq3lr2:30:27)
+at Provider (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=9c444b6e:38:15)
+at TooltipProvider (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9c444b6e:60:5)
+at QueryClientProvider (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9c444b6e:2805:3)
+at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+at t.value (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://d7a50a43-08b2-45b2-ad78-71184a8e2fd8-00-2e0z540yh1c3v.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Cannot read properties of undefined (reading 'split')
