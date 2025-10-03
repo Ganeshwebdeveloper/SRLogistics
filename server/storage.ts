@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and, lt, gte, lte, between, desc, sql as sqlQuery } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
   User,
@@ -16,6 +16,11 @@ import type {
   Message,
   InsertMessage,
   MessageWithSender,
+  CrateDailyBalance,
+  InsertCrateDailyBalance,
+  CrateAdjustment,
+  InsertCrateAdjustment,
+  DailyBalanceWithRoute,
 } from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -75,6 +80,18 @@ export interface IStorage {
   getAllMessages(): Promise<MessageWithSender[]>;
   deleteMessage(id: string): Promise<boolean>;
   deleteOldImageMessages(hours: number): Promise<number>;
+  
+  // Crate Daily Balance operations
+  getDailyBalance(routeId: string, date: Date): Promise<CrateDailyBalance | undefined>;
+  getDailyBalancesByDateRange(routeIds: string[], startDate: Date, endDate: Date): Promise<DailyBalanceWithRoute[]>;
+  createOrUpdateDailyBalance(balance: InsertCrateDailyBalance): Promise<CrateDailyBalance>;
+  
+  // Crate Adjustment operations
+  createAdjustment(adjustment: InsertCrateAdjustment): Promise<CrateAdjustment>;
+  getAdjustmentsByBalance(dailyBalanceId: string): Promise<CrateAdjustment[]>;
+  
+  // Combined operation for adjusting crate count
+  adjustCrateCount(routeId: string, date: Date, delta: number, actorId: string, remarks?: string): Promise<CrateDailyBalance>;
 }
 
 export class DbStorage implements IStorage {
@@ -285,6 +302,136 @@ export class DbStorage implements IStorage {
   async deleteMessage(id: string): Promise<boolean> {
     const result = await db.delete(schema.messages).where(eq(schema.messages.id, id)).returning();
     return result.length > 0;
+  }
+
+  // Crate Daily Balance operations
+  async getDailyBalance(routeId: string, date: Date): Promise<CrateDailyBalance | undefined> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const result = await db
+      .select()
+      .from(schema.crateDailyBalances)
+      .where(
+        and(
+          eq(schema.crateDailyBalances.routeId, routeId),
+          gte(schema.crateDailyBalances.date, startOfDay),
+          lte(schema.crateDailyBalances.date, endOfDay)
+        )
+      );
+    return result[0];
+  }
+
+  async getDailyBalancesByDateRange(
+    routeIds: string[],
+    startDate: Date,
+    endDate: Date
+  ): Promise<DailyBalanceWithRoute[]> {
+    if (routeIds.length === 0) return [];
+
+    const balances = await db
+      .select({
+        id: schema.crateDailyBalances.id,
+        routeId: schema.crateDailyBalances.routeId,
+        routeName: schema.routes.routeName,
+        date: schema.crateDailyBalances.date,
+        openingCount: schema.crateDailyBalances.openingCount,
+        closingCount: schema.crateDailyBalances.closingCount,
+        createdAt: schema.crateDailyBalances.createdAt,
+        updatedAt: schema.crateDailyBalances.updatedAt,
+      })
+      .from(schema.crateDailyBalances)
+      .leftJoin(schema.routes, eq(schema.crateDailyBalances.routeId, schema.routes.id))
+      .where(
+        and(
+          sqlQuery`${schema.crateDailyBalances.routeId} = ANY(${routeIds})`,
+          gte(schema.crateDailyBalances.date, startDate),
+          lte(schema.crateDailyBalances.date, endDate)
+        )
+      )
+      .orderBy(schema.crateDailyBalances.date);
+
+    return balances as DailyBalanceWithRoute[];
+  }
+
+  async createOrUpdateDailyBalance(balance: InsertCrateDailyBalance): Promise<CrateDailyBalance> {
+    const existing = await this.getDailyBalance(balance.routeId, balance.date);
+
+    if (existing) {
+      const result = await db
+        .update(schema.crateDailyBalances)
+        .set({ ...balance, updatedAt: new Date() })
+        .where(eq(schema.crateDailyBalances.id, existing.id))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db
+        .insert(schema.crateDailyBalances)
+        .values(balance)
+        .returning();
+      return result[0];
+    }
+  }
+
+  // Crate Adjustment operations
+  async createAdjustment(adjustment: InsertCrateAdjustment): Promise<CrateAdjustment> {
+    const result = await db
+      .insert(schema.crateAdjustments)
+      .values(adjustment)
+      .returning();
+    return result[0];
+  }
+
+  async getAdjustmentsByBalance(dailyBalanceId: string): Promise<CrateAdjustment[]> {
+    return await db
+      .select()
+      .from(schema.crateAdjustments)
+      .where(eq(schema.crateAdjustments.dailyBalanceId, dailyBalanceId))
+      .orderBy(desc(schema.crateAdjustments.createdAt));
+  }
+
+  // Combined operation for adjusting crate count
+  async adjustCrateCount(
+    routeId: string,
+    date: Date,
+    delta: number,
+    actorId: string,
+    remarks?: string
+  ): Promise<CrateDailyBalance> {
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+
+    const existingBalance = await this.getDailyBalance(routeId, normalizedDate);
+    
+    let openingCount: number;
+    let closingCount: number;
+    
+    if (existingBalance) {
+      openingCount = existingBalance.openingCount;
+      closingCount = existingBalance.closingCount + delta;
+    } else {
+      const route = await this.getRoute(routeId);
+      openingCount = route?.crateCount || 100;
+      closingCount = openingCount + delta;
+    }
+
+    const balance = await this.createOrUpdateDailyBalance({
+      routeId,
+      date: normalizedDate,
+      openingCount,
+      closingCount,
+    });
+
+    await this.createAdjustment({
+      dailyBalanceId: balance.id,
+      delta,
+      actorId,
+      remarks: remarks || null,
+    });
+
+    return balance;
   }
 }
 
