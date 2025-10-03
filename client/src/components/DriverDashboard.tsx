@@ -42,6 +42,22 @@ export function DriverDashboard({
   
   const watchIdRef = useRef<number | null>(null);
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<Date | null>(null);
+  const previousLocationRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  const totalDistanceRef = useRef<number>(0);
+
+  // Calculate distance between two GPS coordinates using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in kilometers
+  };
 
   // Setup GPS tracking on mount
   useEffect(() => {
@@ -192,6 +208,12 @@ export function DriverDashboard({
     },
     onSuccess: () => {
       setTripStatus("ongoing");
+      startTimeRef.current = new Date();
+      previousLocationRef.current = currentLocation;
+      totalDistanceRef.current = 0;
+      setDistance(0);
+      setSpeed(0);
+      setDuration(0);
       queryClient.invalidateQueries({ queryKey: ["/api/trips"] });
       if (driverId) {
         queryClient.invalidateQueries({ queryKey: ["/api/trips/driver", driverId] });
@@ -247,12 +269,40 @@ export function DriverDashboard({
     },
   });
 
+  // Track distance and calculate metrics when location changes
   useEffect(() => {
-    if (tripStatus === "ongoing") {
+    if (tripStatus === "ongoing" && currentLocation && previousLocationRef.current) {
+      // Calculate distance traveled since last location update
+      const distanceTraveled = calculateDistance(
+        previousLocationRef.current.latitude,
+        previousLocationRef.current.longitude,
+        currentLocation.latitude,
+        currentLocation.longitude
+      );
+      
+      // Update total distance if movement is significant (more than 10 meters)
+      if (distanceTraveled > 0.01) {
+        totalDistanceRef.current += distanceTraveled;
+        setDistance(totalDistanceRef.current);
+        previousLocationRef.current = currentLocation;
+      }
+    }
+  }, [currentLocation, tripStatus]);
+
+  // Update duration and average speed every second
+  useEffect(() => {
+    if (tripStatus === "ongoing" && startTimeRef.current) {
       const interval = setInterval(() => {
-        setDistance((prev) => prev + Math.random() * 2);
-        setSpeed(Math.random() * 60 + 40);
-        setDuration((prev) => prev + 1);
+        const now = new Date();
+        const elapsedSeconds = Math.floor((now.getTime() - startTimeRef.current!.getTime()) / 1000);
+        setDuration(elapsedSeconds);
+        
+        // Calculate average speed (km/h) = distance (km) / time (hours)
+        if (elapsedSeconds > 0) {
+          const elapsedHours = elapsedSeconds / 3600;
+          const avgSpeed = totalDistanceRef.current / elapsedHours;
+          setSpeed(avgSpeed > 0 ? avgSpeed : 0);
+        }
       }, 1000);
 
       return () => clearInterval(interval);
