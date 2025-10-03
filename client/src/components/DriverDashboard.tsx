@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Square, MapPin, Clock, Gauge, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
 
 interface DriverDashboardProps {
   driverName?: string;
@@ -17,7 +16,7 @@ interface DriverDashboardProps {
   };
   tripId?: string;
   driverId?: string;
-  onLogout?: () => void;
+  onLogout: () => void;
 }
 
 export function DriverDashboard({ 
@@ -41,7 +40,6 @@ export function DriverDashboard({
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
   
   const watchIdRef = useRef<number | null>(null);
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -376,11 +374,7 @@ export function DriverDashboard({
         title: "Logged out",
         description: "You have been logged out successfully",
       });
-      if (onLogout) {
-        onLogout();
-      } else {
-        setLocation("/");
-      }
+      onLogout();
     },
     onError: (error: Error) => {
       toast({
