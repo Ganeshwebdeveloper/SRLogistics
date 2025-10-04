@@ -3,7 +3,7 @@ services:
     name: sr-logistics
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && npm run db:push
     startCommand: npm start
     envVars:
       - key: NODE_ENV
