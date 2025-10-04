@@ -1,0 +1,50 @@
+2025-10-04T18:12:31.455534575Z   severity: undefined,
+2025-10-04T18:12:31.455536706Z   code: undefined,
+2025-10-04T18:12:31.455538726Z   detail: undefined,
+2025-10-04T18:12:31.455540726Z   hint: undefined,
+2025-10-04T18:12:31.455542726Z   position: undefined,
+2025-10-04T18:12:31.455544756Z   internalPosition: undefined,
+2025-10-04T18:12:31.455546806Z   internalQuery: undefined,
+2025-10-04T18:12:31.455548796Z   where: undefined,
+2025-10-04T18:12:31.455550756Z   schema: undefined,
+2025-10-04T18:12:31.455552796Z   table: undefined,
+2025-10-04T18:12:31.455554787Z   column: undefined,
+2025-10-04T18:12:31.455556807Z   dataType: undefined,
+2025-10-04T18:12:31.455558797Z   constraint: undefined,
+2025-10-04T18:12:31.455560817Z   file: undefined,
+2025-10-04T18:12:31.455562797Z   line: undefined,
+2025-10-04T18:12:31.455564877Z   routine: undefined,
+2025-10-04T18:12:31.455566997Z   sourceError: TypeError: fetch failed
+2025-10-04T18:12:31.455569117Z       at node:internal/deps/undici/undici:13510:13
+2025-10-04T18:12:31.455571177Z       at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-10-04T18:12:31.455573298Z       at async execute (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1548:15)
+2025-10-04T18:12:31.455575418Z       at async NeonHttpPreparedQuery.execute (file:///opt/render/project/src/node_modules/drizzle-orm/neon-http/session.js:40:20)
+2025-10-04T18:12:31.455577608Z       at async DbStorage.deleteOldMessages (file:///opt/render/project/src/dist/index.js:324:20)
+2025-10-04T18:12:31.455579618Z       at async cleanupOldMessages (file:///opt/render/project/src/dist/index.js:1309:28) {
+2025-10-04T18:12:31.455581698Z     [cause]: Error: connect ECONNREFUSED 10.230.24.63:443
+2025-10-04T18:12:31.455583788Z         at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+2025-10-04T18:12:31.455585849Z       errno: -111,
+2025-10-04T18:12:31.455587869Z       code: 'ECONNREFUSED',
+2025-10-04T18:12:31.455589879Z       syscall: 'connect',
+2025-10-04T18:12:31.455591849Z       address: '10.230.24.63',
+2025-10-04T18:12:31.455593899Z       port: 443
+2025-10-04T18:12:31.455595959Z     }
+2025-10-04T18:12:31.455597939Z   }
+2025-10-04T18:12:31.455599989Z }
+2025-10-04T18:12:33.560144888Z ==> Your service is live 🎉
+2025-10-04T18:12:33.595534957Z ==> 
+2025-10-04T18:12:33.621410276Z ==> ///////////////////////////////////////////////////////////
+2025-10-04T18:12:33.646747325Z ==> 
+2025-10-04T18:12:33.671621275Z ==> Available at your primary URL https://sr-logistics.onrender.com
+2025-10-04T18:12:33.694593834Z ==> 
+2025-10-04T18:12:33.717568393Z ==> ///////////////////////////////////////////////////////////
+2025-10-04T18:12:47.474796656Z 6:12:47 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Not authenticated"}
+2025-10-04T18:13:10.155579856Z 6:13:10 PM [express] POST /api/auth/login 400 in 31ms :: {"message":"Error connecting to database: f…
+2025-10-04T18:13:15.589937559Z 6:13:15 PM [express] POST /api/auth/login 400 in 5ms :: {"message":"Error connecting to database: fe…
+2025-10-04T18:13:28.837802191Z 6:13:28 PM [express] POST /api/auth/login 400 in 7ms :: {"message":"Error connecting to database: fe…
+2025-10-04T18:16:52.77238008Z 6:16:52 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Not authenticated"}
+2025-10-04T18:17:08.780561723Z 6:17:08 PM [express] POST /api/auth/login 400 in 4ms :: {"message":"Error connecting to database: fe…
+2025-10-04T18:17:35.183469833Z ==> Detected service running on port 10000
+2025-10-04T18:17:35.313005517Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+2025-10-04T18:23:13.98675293Z 6:23:13 PM [express] POST /api/auth/login 400 in 6ms :: {"message":"Error connecting to database: fe…
+2025-10-04T18:23:29.45612907Z 6:23:29 PM [express] POST /api/auth/login 400 in 5ms :: {"message":"Error connecting to database: fe…

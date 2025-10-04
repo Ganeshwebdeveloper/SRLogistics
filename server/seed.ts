@@ -1,11 +1,15 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
 import { eq } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import bcrypt from "bcrypt";
+import ws from "ws";
 
-const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql, { schema });
+// Configure Neon to use WebSocket (works with standard PostgreSQL URLs)
+neonConfig.webSocketConstructor = ws;
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+const db = drizzle(pool, { schema });
 
 async function seed() {
   try {

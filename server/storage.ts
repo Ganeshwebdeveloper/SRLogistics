@@ -1,5 +1,9 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import ws from "ws";
+
+// Configure Neon to use WebSocket (works with standard PostgreSQL URLs)
+neonConfig.webSocketConstructor = ws;
 import { eq, and, lt, gte, lte, between, desc, inArray, sql as sqlQuery } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
@@ -27,8 +31,8 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const sql = neon(process.env.DATABASE_URL);
-const db = drizzle(sql, { schema });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const db = drizzle(pool, { schema });
 
 export interface IStorage {
   // User operations
