@@ -23,6 +23,16 @@ The `render.yaml` file already contains all necessary configuration:
 - **Database**: sr-logistics-db (PostgreSQL database)
 - **Environment Variables**: Automatically configured
 
+### Build Process
+
+The deployment uses a custom build script (`scripts/build-render.sh`) that handles compatibility between Replit and Render.com environments:
+
+1. **Dependency Installation**: Installs all dependencies including devDependencies (needed for build tools like TypeScript, Tailwind CSS, etc.)
+2. **Replit Plugin Stubs**: Creates stub versions of Replit-specific Vite plugins that aren't available on Render.com's npm registry
+3. **Build Execution**: Runs the standard Vite and esbuild process to compile frontend and backend code
+
+This approach ensures the project builds successfully on both Replit (development) and Render.com (production) without code changes.
+
 ### 3. Database Migrations (Automatic)
 
 Database migrations are automatically applied during deployment using `scripts/start-production.sh`:
@@ -93,6 +103,7 @@ If deployment fails, check the build logs:
 Common issues:
 - **npm install fails**: Check if all dependencies are in `package.json`
 - **Build fails**: Check for TypeScript errors locally with `npm run check`
+- **Replit plugin errors**: The project uses Replit-specific development plugins that aren't available on Render.com. The `scripts/build-render.sh` script automatically creates stub versions of these plugins during the build process, so this should not cause issues
 
 ### Database Connection Issues
 
