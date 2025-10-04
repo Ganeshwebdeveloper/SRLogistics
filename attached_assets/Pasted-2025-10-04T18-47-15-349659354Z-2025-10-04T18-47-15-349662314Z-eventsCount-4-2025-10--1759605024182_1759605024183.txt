@@ -1,0 +1,50 @@
+2025-10-04T18:47:15.349659354Z     },
+2025-10-04T18:47:15.349662314Z     _eventsCount: 4,
+2025-10-04T18:47:15.349664494Z     _maxListeners: undefined,
+2025-10-04T18:47:15.349666554Z     _binaryType: 'arraybuffer',
+2025-10-04T18:47:15.349668664Z     _closeCode: 1006,
+2025-10-04T18:47:15.349670754Z     _closeFrameReceived: false,
+2025-10-04T18:47:15.349672824Z     _closeFrameSent: false,
+2025-10-04T18:47:15.349674904Z     _closeMessage: <Buffer >,
+2025-10-04T18:47:15.349676934Z     _closeTimer: null,
+2025-10-04T18:47:15.349679944Z     _errorEmitted: true,
+2025-10-04T18:47:15.349683484Z     _extensions: {},
+2025-10-04T18:47:15.349687375Z     _paused: false,
+2025-10-04T18:47:15.349691025Z     _protocol: '',
+2025-10-04T18:47:15.349693915Z     _readyState: 3,
+2025-10-04T18:47:15.349697345Z     _receiver: null,
+2025-10-04T18:47:15.349700775Z     _sender: null,
+2025-10-04T18:47:15.349704375Z     _socket: null,
+2025-10-04T18:47:15.349707625Z     _bufferedAmount: 0,
+2025-10-04T18:47:15.349710755Z     _isServer: false,
+2025-10-04T18:47:15.349713955Z     _redirects: 0,
+2025-10-04T18:47:15.349716965Z     _autoPong: true,
+2025-10-04T18:47:15.349720185Z     _url: 'wss://dpg-d3g35p63jp1c73fl1tfg-a/v2',
+2025-10-04T18:47:15.349723636Z     _req: null,
+2025-10-04T18:47:15.349726985Z     [Symbol(shapeMode)]: false,
+2025-10-04T18:47:15.349730325Z     [Symbol(kCapture)]: false
+2025-10-04T18:47:15.349732456Z   },
+2025-10-04T18:47:15.349734656Z   [Symbol(kType)]: 'error',
+2025-10-04T18:47:15.349737096Z   [Symbol(kError)]: Error: connect ECONNREFUSED 10.230.24.63:443
+2025-10-04T18:47:15.349739496Z       at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1636:16) {
+2025-10-04T18:47:15.349741586Z     errno: -111,
+2025-10-04T18:47:15.349743666Z     code: 'ECONNREFUSED',
+2025-10-04T18:47:15.349745726Z     syscall: 'connect',
+2025-10-04T18:47:15.349747756Z     address: '10.230.24.63',
+2025-10-04T18:47:15.349750006Z     port: 443
+2025-10-04T18:47:15.349752166Z   },
+2025-10-04T18:47:15.349754356Z   [Symbol(kMessage)]: 'connect ECONNREFUSED 10.230.24.63:443'
+2025-10-04T18:47:15.349756476Z }
+2025-10-04T18:47:16.300768818Z ==> Your service is live 🎉
+2025-10-04T18:47:16.329528647Z ==> 
+2025-10-04T18:47:16.357441146Z ==> ///////////////////////////////////////////////////////////
+2025-10-04T18:47:16.386686586Z ==> 
+2025-10-04T18:47:16.421477844Z ==> Available at your primary URL https://sr-logistics.onrender.com
+2025-10-04T18:47:16.448765214Z ==> 
+2025-10-04T18:47:16.495191652Z ==> ///////////////////////////////////////////////////////////
+2025-10-04T18:49:10.498365996Z 6:49:10 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Not authenticated"}
+2025-10-04T18:49:24.923808614Z 6:49:24 PM [express] POST /api/auth/login 400 in 6ms :: {"message":"Login failed"}
+2025-10-04T18:49:33.258659058Z 6:49:33 PM [express] POST /api/auth/login 400 in 4ms :: {"message":"Login failed"}
+2025-10-04T18:50:00.980704853Z 6:50:00 PM [express] POST /api/auth/login 400 in 6ms :: {"message":"Login failed"}
+2025-10-04T18:52:18.761531866Z ==> Detected service running on port 10000
+2025-10-04T18:52:18.886846672Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
