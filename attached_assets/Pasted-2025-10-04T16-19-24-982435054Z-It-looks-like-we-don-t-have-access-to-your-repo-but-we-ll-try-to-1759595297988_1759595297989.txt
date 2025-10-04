@@ -1,0 +1,42 @@
+2025-10-04T16:19:24.982435054Z ==> It looks like we don't have access to your repo, but we'll try to clone it anyway.
+2025-10-04T16:19:24.982707507Z ==> Cloning from https://github.com/Ganeshwebdeveloper/SRLogistics
+2025-10-04T16:19:25.539505377Z ==> Checking out commit 73dcd7240f90bb8eb1f6c6a9ca4d594ac1b2a083 in branch main
+2025-10-04T16:19:28.172050874Z ==> Using Node.js version 22.16.0 (default)
+2025-10-04T16:19:28.198967469Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2025-10-04T16:19:30.265185847Z ==> Running build command 'npm install && npm run build'...
+2025-10-04T16:19:40.573802218Z 
+2025-10-04T16:19:40.573827649Z added 460 packages, and audited 461 packages in 10s
+2025-10-04T16:19:40.573836889Z 
+2025-10-04T16:19:40.573843939Z 59 packages are looking for funding
+2025-10-04T16:19:40.573847699Z   run `npm fund` for details
+2025-10-04T16:19:40.582570417Z 
+2025-10-04T16:19:40.582597068Z 6 vulnerabilities (3 low, 2 moderate, 1 high)
+2025-10-04T16:19:40.582602008Z 
+2025-10-04T16:19:40.582606348Z To address issues that do not require attention, run:
+2025-10-04T16:19:40.582609968Z   npm audit fix
+2025-10-04T16:19:40.582613578Z 
+2025-10-04T16:19:40.582618378Z To address all issues possible (including breaking changes), run:
+2025-10-04T16:19:40.582623478Z   npm audit fix --force
+2025-10-04T16:19:40.582627508Z 
+2025-10-04T16:19:40.582631618Z Some issues need review, and may require choosing
+2025-10-04T16:19:40.582635678Z a different dependency.
+2025-10-04T16:19:40.582639648Z 
+2025-10-04T16:19:40.582644798Z Run `npm audit` for details.
+2025-10-04T16:19:40.755102952Z 
+2025-10-04T16:19:40.755129782Z > rest-express@1.0.0 build
+2025-10-04T16:19:40.755136282Z > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+2025-10-04T16:19:40.755143072Z 
+2025-10-04T16:19:40.923854839Z failed to load config from /opt/render/project/src/vite.config.ts
+2025-10-04T16:19:40.924165062Z error during build:
+2025-10-04T16:19:40.924171303Z Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@replit/vite-plugin-runtime-error-modal' imported from /opt/render/project/src/vite.config.ts.timestamp-1759594780921-7584b665663d2.mjs
+2025-10-04T16:19:40.924175283Z     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+2025-10-04T16:19:40.924178473Z     at packageResolve (node:internal/modules/esm/resolve:768:81)
+2025-10-04T16:19:40.924181393Z     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+2025-10-04T16:19:40.924184233Z     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+2025-10-04T16:19:40.924187683Z     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+2025-10-04T16:19:40.924190543Z     at #cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+2025-10-04T16:19:40.924193423Z     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+2025-10-04T16:19:40.924196303Z     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+2025-10-04T16:19:40.924199163Z     at ModuleJob._link (node:internal/modules/esm/module_job:137:49)
+2025-10-04T16:19:40.952400343Z ==> Build failed 😞
+2025-10-04T16:19:40.952413413Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
