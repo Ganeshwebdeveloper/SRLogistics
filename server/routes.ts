@@ -176,6 +176,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // Authentication endpoints
   app.post("/api/auth/register", async (req, res) => {
     try {
