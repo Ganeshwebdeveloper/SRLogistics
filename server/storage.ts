@@ -1,11 +1,6 @@
-import { Pool as NeonPool, neonConfig } from "@neondatabase/serverless";
 import pkg from "pg";
-const { Pool: PgPool } = pkg;
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
-
-// Configure Neon to use WebSocket (works with standard PostgreSQL URLs)
-neonConfig.webSocketConstructor = ws;
+const { Pool } = pkg;
+import { drizzle } from "drizzle-orm/node-postgres";
 import { eq, and, lt, gte, lte, between, desc, inArray, sql as sqlQuery } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import type {
@@ -33,18 +28,19 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-// Pool for Drizzle ORM (using Neon serverless)
-const pool = new NeonPool({ connectionString: process.env.DATABASE_URL });
-const db = drizzle(pool, { schema });
-
-// Separate pool for session storage (using standard pg Pool)
-// This is a singleton to prevent connection leaks on server restarts
-export const sessionPool = new PgPool({
+// Single pool for both Drizzle ORM and session storage (standard PostgreSQL)
+// This works with any PostgreSQL database (Neon, Supabase, Render, etc.)
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 10, // Maximum number of connections in the pool
+  max: 20, // Maximum number of connections in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
   connectionTimeoutMillis: 10000, // Return an error after 10 seconds if unable to get a connection
 });
+
+const db = drizzle(pool, { schema });
+
+// Export the same pool for session storage to prevent connection leaks
+export const sessionPool = pool;
 
 export interface IStorage {
   // User operations
