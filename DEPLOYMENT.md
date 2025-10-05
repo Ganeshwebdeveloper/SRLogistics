@@ -91,7 +91,27 @@ The following environment variables are automatically configured by Render:
 - `SESSION_SECRET`: Auto-generated secure random string
 - `PORT`: Automatically set by Render (defaults to 5000)
 
+## Session Management
+
+The application uses **PostgreSQL-backed session storage in production** to ensure login sessions persist across server restarts. This is critical for Render.com's free tier, which may restart services periodically.
+
+- **Production**: Sessions stored in PostgreSQL (table: `session`)
+- **Development**: Sessions stored in memory for faster iteration
+
+The session table is created automatically on first startup using `createTableIfMissing: true`.
+
 ## Troubleshooting
+
+### Login Issues (400 Error)
+
+If users get a 400 error when trying to log in:
+
+1. **Check session store logs**: Look for `[Session Store Error]` messages in the application logs
+2. **Verify DATABASE_URL**: Ensure the database connection string is correct
+3. **Check SESSION_SECRET**: Verify it's set in environment variables
+4. **Inspect session table**: Connect to the database and verify the `session` table exists
+
+The application automatically creates the session table on startup. If you see session-related errors, check the logs for detailed error messages.
 
 ### Deployment Failed
 
@@ -111,6 +131,7 @@ If the application can't connect to the database:
 1. Verify that `DATABASE_URL` is set in the environment variables
 2. Check that the database service is running
 3. Ensure you ran `npm run db:push` to create the schema
+4. Check that the session table exists and is accessible
 
 ### Real-time Features Not Working
 
