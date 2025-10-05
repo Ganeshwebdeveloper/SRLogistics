@@ -9,6 +9,7 @@ import { storage, sessionPool } from "./storage";
 const app = express();
 
 // Trust proxy - required for secure cookies to work behind Render/Heroku proxies
+// MUST be set before any middleware to ensure req.secure is correctly detected
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", 1);
 }
