@@ -1,14 +1,15 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import pkg from "pg";
+const { Pool } = pkg;
+import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 import * as schema from "@shared/schema";
 import bcrypt from "bcrypt";
-import ws from "ws";
 
-// Configure Neon to use WebSocket (works with standard PostgreSQL URLs)
-neonConfig.webSocketConstructor = ws;
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema });
 
 async function seed() {
@@ -137,8 +138,12 @@ async function seed() {
     console.log("Admin - Email: admin@srlogistics.com, Password: admin123");
     console.log("Driver 1 - Email: john@srlogistics.com, Password: driver123");
     console.log("Driver 2 - Email: sarah@srlogistics.com, Password: driver123");
+    
+    await pool.end();
+    process.exit(0);
   } catch (error) {
     console.error("❌ Seeding failed:", error);
+    await pool.end();
     process.exit(1);
   }
 }
