@@ -3,20 +3,13 @@ services:
     name: sr-logistics
     runtime: node
     plan: free
-    buildCommand: npm install --include=dev && ./scripts/build-render.sh
-    startCommand: ./scripts/start-production.sh
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        fromDatabase:
-          name: sr-logistics-db
-          property: connectionString
+        sync: false
       - key: SESSION_SECRET
         generateValue: true
     healthCheckPath: /
-
-databases:
-  - name: sr-logistics-db
-    databaseName: sr_logistics
-    plan: free
