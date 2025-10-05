@@ -7,6 +7,12 @@ import { setupVite, serveStatic, log } from "./vite";
 import { storage, sessionPool } from "./storage";
 
 const app = express();
+
+// Trust proxy - required for secure cookies to work behind Render/Heroku proxies
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
