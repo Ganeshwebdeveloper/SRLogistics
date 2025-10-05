@@ -1,19 +1,46 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import memorystore from "memorystore";
+import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { storage } from "./storage";
+import { storage, sessionPool } from "./storage";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session setup
-const MemoryStore = memorystore(session);
-const sessionStore = new MemoryStore({
-  checkPeriod: 86400000, // prune expired entries every 24h
-});
+// Session setup - use PostgreSQL in production, memory in development
+let sessionStore: session.Store;
+
+if (process.env.NODE_ENV === "production") {
+  // Use PostgreSQL session store in production for persistence across restarts
+  const PgStore = connectPg(session);
+  
+  sessionStore = new PgStore({
+    pool: sessionPool, // Reuse singleton pool from storage.ts to prevent connection leaks
+    tableName: "session",
+    createTableIfMissing: true,
+    errorLog: (err) => {
+      console.error("[Session Store Error]", err);
+    },
+  });
+  
+  // Listen for store errors to surface login failures
+  sessionStore.on("error", (err) => {
+    console.error("[Session Store Runtime Error]", err);
+  });
+  
+  log("Using PostgreSQL session store for production");
+} else {
+  // Use memory store in development for faster iteration
+  const MemoryStore = memorystore(session);
+  sessionStore = new MemoryStore({
+    checkPeriod: 86400000, // prune expired entries every 24h
+  });
+  
+  log("Using in-memory session store for development");
+}
 
 app.use(
   session({
