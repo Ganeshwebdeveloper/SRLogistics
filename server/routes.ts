@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { z } from "zod";
 import { insertUserSchema, insertTruckSchema, insertRouteSchema, insertTripSchema, insertCrateSchema, insertMessageSchema } from "@shared/schema";
 import { requireAuth, requireAdmin } from "./middleware";
+import { calculateDistance, calculateSpeed } from "@shared/utils/gpsCalculations";
 import "./types";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -132,9 +133,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
               timestamp,
             };
 
-            // Update the trip's currentLocation field with JSON string
+            // Calculate distance and speed if we have a previous location
+            let distanceIncrement = 0;
+            let newTotalDistance = parseFloat(trip.distanceTravelled?.toString() || "0");
+            let newAvgSpeed = parseFloat(trip.avgSpeed?.toString() || "0");
+
+            if (trip.currentLocation && trip.startTime) {
+              try {
+                const prevLocation = JSON.parse(trip.currentLocation);
+                if (prevLocation.latitude && prevLocation.longitude) {
+                  // Calculate distance traveled since last update
+                  distanceIncrement = calculateDistance(
+                    prevLocation.latitude,
+                    prevLocation.longitude,
+                    latitude,
+                    longitude
+                  );
+
+                  // Only update if movement is significant (more than 10 meters)
+                  if (distanceIncrement > 0.01) {
+                    newTotalDistance += distanceIncrement;
+
+                    // Calculate average speed based on total distance and elapsed time
+                    const startTime = typeof trip.startTime === 'string' 
+                      ? new Date(trip.startTime) 
+                      : trip.startTime;
+                    const currentTime = new Date(timestamp);
+                    const elapsedSeconds = Math.floor(
+                      (currentTime.getTime() - startTime.getTime()) / 1000
+                    );
+
+                    if (elapsedSeconds > 0) {
+                      newAvgSpeed = calculateSpeed(newTotalDistance, elapsedSeconds);
+                    }
+
+                    console.log(`📊 Trip metrics: +${distanceIncrement.toFixed(3)} km, Total: ${newTotalDistance.toFixed(2)} km, Avg Speed: ${newAvgSpeed.toFixed(1)} km/h`);
+                  }
+                }
+              } catch (error) {
+                console.error("Error parsing previous location:", error);
+              }
+            }
+
+            // Update the trip with new location, distance, and speed
             const updatedTrip = await storage.updateTrip(tripId, {
               currentLocation: JSON.stringify(locationData),
+              distanceTravelled: newTotalDistance.toString(),
+              avgSpeed: newAvgSpeed.toString(),
             });
 
             if (!updatedTrip) {
