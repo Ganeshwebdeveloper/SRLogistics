@@ -22,7 +22,7 @@ interface DashboardViewProps {
   onNavigateToChat: () => void;
 }
 
-const DEFAULT_LOCATION: [number, number] = [40.7128, -74.0060];
+const DEFAULT_LOCATION: [number, number] = [40.7128, -74.006];
 
 const TRUCK_COLORS = [
   "#3b82f6",
@@ -35,7 +35,11 @@ const TRUCK_COLORS = [
   "#f97316",
 ];
 
-export function DashboardView({ userId, userName, onNavigateToChat }: DashboardViewProps) {
+export function DashboardView({
+  userId,
+  userName,
+  onNavigateToChat,
+}: DashboardViewProps) {
   const { data: trips = [] } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
   });
@@ -50,7 +54,7 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
 
   const ongoingTrips = trips.filter((trip) => trip.status === "ongoing");
   const availableDrivers = drivers.filter(
-    (driver) => !ongoingTrips.some((trip) => trip.driverId === driver.id)
+    (driver) => !ongoingTrips.some((trip) => trip.driverId === driver.id),
   );
 
   const availableTrucks = trucks.filter((t) => t.status === "available");
@@ -68,9 +72,9 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
     const driver = drivers.find((d) => d.id === trip.driverId);
     const truck = trucks.find((t) => t.id === trip.truckId);
     const truckNumber = truck?.truckNumber || "Unknown";
-    
+
     let position: [number, number] = DEFAULT_LOCATION;
-    
+
     if (trip.currentLocation) {
       try {
         const location = JSON.parse(trip.currentLocation);
@@ -78,10 +82,13 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
           position = [location.latitude, location.longitude];
         }
       } catch (error) {
-        console.error(`Failed to parse currentLocation for trip ${trip.id}:`, error);
+        console.error(
+          `Failed to parse currentLocation for trip ${trip.id}:`,
+          error,
+        );
       }
     }
-    
+
     return {
       id: trip.id,
       name: driver?.name || "Unknown Driver",
@@ -95,16 +102,18 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Monitor and manage your fleet operations</p>
+        <p className="text-muted-foreground">
+          Monitor and manage your fleet operations
+        </p>
       </div>
 
-      <TripAssignmentForm />
+      <UnreadMessagesNotification onNavigateToChat={onNavigateToChat} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard 
-          title="Active Trips" 
-          value={ongoingTrips.length} 
-          icon={Truck} 
+        <StatsCard
+          title="Active Trips"
+          value={ongoingTrips.length}
+          icon={Truck}
           gradientClass="gradient-card-blue"
           iconColor="text-blue-500"
         />
@@ -115,16 +124,16 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
           gradientClass="gradient-card-green"
           iconColor="text-green-500"
         />
-        <StatsCard 
-          title="Total Distance" 
-          value={`${totalDistance} km`} 
+        <StatsCard
+          title="Total Distance"
+          value={`${totalDistance} km`}
           icon={MapPin}
           gradientClass="gradient-card-purple"
           iconColor="text-purple-500"
         />
-        <StatsCard 
-          title="Total Trips" 
-          value={trips.length} 
+        <StatsCard
+          title="Total Trips"
+          value={trips.length}
           icon={Package}
           gradientClass="gradient-card-orange"
           iconColor="text-orange-500"
@@ -152,11 +161,19 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
                 </TableHeader>
                 <TableBody>
                   {availableDrivers.map((driver) => (
-                    <TableRow key={driver.id} data-testid={`row-driver-${driver.id}`}>
-                      <TableCell className="font-medium">{driver.name}</TableCell>
+                    <TableRow
+                      key={driver.id}
+                      data-testid={`row-driver-${driver.id}`}
+                    >
+                      <TableCell className="font-medium">
+                        {driver.name}
+                      </TableCell>
                       <TableCell>{driver.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" data-testid="badge-status-available">
+                        <Badge
+                          variant="outline"
+                          data-testid="badge-status-available"
+                        >
                           Available
                         </Badge>
                       </TableCell>
@@ -188,11 +205,19 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
                 </TableHeader>
                 <TableBody>
                   {availableTrucks.map((truck) => (
-                    <TableRow key={truck.id} data-testid={`row-truck-${truck.id}`}>
-                      <TableCell className="font-medium">{truck.truckNumber}</TableCell>
+                    <TableRow
+                      key={truck.id}
+                      data-testid={`row-truck-${truck.id}`}
+                    >
+                      <TableCell className="font-medium">
+                        {truck.truckNumber}
+                      </TableCell>
                       <TableCell>{truck.capacity}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" data-testid="badge-status-available">
+                        <Badge
+                          variant="outline"
+                          data-testid="badge-status-available"
+                        >
                           Available
                         </Badge>
                       </TableCell>
@@ -205,9 +230,9 @@ export function DashboardView({ userId, userName, onNavigateToChat }: DashboardV
         </Card>
       </div>
 
+      <TripAssignmentForm />
+
       <MapView drivers={driversWithLocations} />
-      
-      <UnreadMessagesNotification onNavigateToChat={onNavigateToChat} />
     </div>
   );
 }
