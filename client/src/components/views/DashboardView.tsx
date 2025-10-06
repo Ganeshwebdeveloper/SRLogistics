@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatsCard } from "@/components/StatsCard";
 import { TripAssignmentForm } from "@/components/TripAssignmentForm";
 import { MapView } from "@/components/MapView";
-import { ChatInterface } from "@/components/ChatInterface";
+import { UnreadMessagesNotification } from "@/components/UnreadMessagesNotification";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -19,6 +19,7 @@ import type { User, Trip, Truck as TruckType } from "@shared/schema";
 interface DashboardViewProps {
   userId: string;
   userName: string;
+  onNavigateToChat: () => void;
 }
 
 const DEFAULT_LOCATION: [number, number] = [40.7128, -74.0060];
@@ -34,7 +35,7 @@ const TRUCK_COLORS = [
   "#f97316",
 ];
 
-export function DashboardView({ userId, userName }: DashboardViewProps) {
+export function DashboardView({ userId, userName, onNavigateToChat }: DashboardViewProps) {
   const { data: trips = [] } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
   });
@@ -204,10 +205,9 @@ export function DashboardView({ userId, userName }: DashboardViewProps) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <MapView drivers={driversWithLocations} />
-        <ChatInterface currentUserId={userId} currentUserName={userName} />
-      </div>
+      <MapView drivers={driversWithLocations} />
+      
+      <UnreadMessagesNotification onNavigateToChat={onNavigateToChat} />
     </div>
   );
 }

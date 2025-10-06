@@ -30,7 +30,7 @@ export default function AdminDashboardPage({ user, onLogout }: AdminDashboardPag
   const renderView = () => {
     switch (activeView) {
       case "dashboard":
-        return <DashboardView userId={user.id} userName={user.name} />;
+        return <DashboardView userId={user.id} userName={user.name} onNavigateToChat={() => setActiveView("chat")} />;
       case "fleet":
         return <FleetManagement />;
       case "tracking":
@@ -44,7 +44,7 @@ export default function AdminDashboardPage({ user, onLogout }: AdminDashboardPag
       case "salary":
         return <DriverSalaryView />;
       default:
-        return <DashboardView userId={user.id} userName={user.name} />;
+        return <DashboardView userId={user.id} userName={user.name} onNavigateToChat={() => setActiveView("chat")} />;
     }
   };
 
