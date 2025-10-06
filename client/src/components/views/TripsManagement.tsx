@@ -312,24 +312,26 @@ export function TripsManagement() {
       trip.startTime ? format(parseISO(typeof trip.startTime === 'string' ? trip.startTime : trip.startTime.toISOString()), "MMM dd, yyyy HH:mm") : "Not started",
       trip.status.charAt(0).toUpperCase() + trip.status.slice(1),
       `${trip.distanceTravelled || "0"} km`,
+      `${trip.avgSpeed || "0"} km/h`,
       `₹${trip.rupees}`,
     ]);
     
     autoTable(doc, {
       startY: selectedMonth !== "all" || statusFilter !== "all" ? 48 : 36,
-      head: [["Driver", "Truck", "Route", "Start Time", "Status", "Distance", "Payment"]],
+      head: [["Driver", "Truck", "Route", "Start Time", "Status", "Distance", "Speed", "Payment"]],
       body: tableData,
       theme: "grid",
       headStyles: { fillColor: [37, 99, 235], textColor: 255 },
       styles: { fontSize: 9, cellPadding: 3 },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 35 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 25 },
+        0: { cellWidth: 20 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 18 },
+        5: { cellWidth: 18 },
+        6: { cellWidth: 18 },
+        7: { cellWidth: 20 },
       },
     });
     
@@ -346,7 +348,7 @@ export function TripsManagement() {
       ["Trips Report"],
       [`Generated on: ${format(new Date(), "MMM dd, yyyy HH:mm")}`],
       [],
-      ["Driver", "Truck", "Route", "Start Time", "Status", "Distance (km)", "Payment (₹)"],
+      ["Driver", "Truck", "Route", "Start Time", "Status", "Distance (km)", "Speed (km/h)", "Payment (₹)"],
       ...sortedTrips.map((trip) => [
         getDriver(trip.driverId),
         getTruck(trip.truckId),
@@ -354,6 +356,7 @@ export function TripsManagement() {
         trip.startTime ? format(parseISO(typeof trip.startTime === 'string' ? trip.startTime : trip.startTime.toISOString()), "MMM dd, yyyy HH:mm") : "Not started",
         trip.status.charAt(0).toUpperCase() + trip.status.slice(1),
         trip.distanceTravelled || "0",
+        trip.avgSpeed || "0",
         trip.rupees,
       ]),
     ];
@@ -366,6 +369,7 @@ export function TripsManagement() {
       { wch: 25 },
       { wch: 25 },
       { wch: 12 },
+      { wch: 15 },
       { wch: 15 },
       { wch: 15 },
     ];
@@ -522,6 +526,7 @@ export function TripsManagement() {
                     <TableHead>Start Time</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Distance</TableHead>
+                    <TableHead>Avg Speed</TableHead>
                     <TableHead>Payment (₹)</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -541,6 +546,7 @@ export function TripsManagement() {
                       </TableCell>
                       <TableCell>{getStatusBadge(trip.status)}</TableCell>
                       <TableCell>{trip.distanceTravelled || "0"} km</TableCell>
+                      <TableCell>{trip.avgSpeed || "0"} km/h</TableCell>
                       <TableCell>₹{trip.rupees}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
