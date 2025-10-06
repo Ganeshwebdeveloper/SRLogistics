@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, ChevronRight } from "lucide-react";
+import { MessageSquare, ChevronRight, Image as ImageIcon } from "lucide-react";
 import type { MessageWithSender } from "@shared/schema";
 import { format, isToday, isYesterday } from "date-fns";
 
@@ -33,11 +33,22 @@ export function UnreadMessagesNotification({ onNavigateToChat }: UnreadMessagesN
     return text.substring(0, maxLength) + "...";
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onNavigateToChat();
+    }
+  };
+
   return (
     <Card 
+      role="button"
+      tabIndex={0}
       className="hover-elevate active-elevate-2 cursor-pointer transition-all animate-fade-in"
       onClick={onNavigateToChat}
+      onKeyDown={handleKeyDown}
       data-testid="card-unread-messages-notification"
+      aria-label="View group chat messages"
     >
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-4">
@@ -59,8 +70,15 @@ export function UnreadMessagesNotification({ onNavigateToChat }: UnreadMessagesN
                   <p className="text-xs font-medium text-muted-foreground">
                     {latestMessage.senderName}
                   </p>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {latestMessage.type === "image" ? "📷 Image" : truncateMessage(latestMessage.content)}
+                  <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
+                    {latestMessage.type === "image" ? (
+                      <>
+                        <ImageIcon className="h-3 w-3" />
+                        <span>Image</span>
+                      </>
+                    ) : (
+                      truncateMessage(latestMessage.content)
+                    )}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {formatTimestamp(latestMessage.createdAt)}
