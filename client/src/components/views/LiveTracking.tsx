@@ -11,9 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Gauge, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Gauge, Clock, RefreshCw } from "lucide-react";
 import type { Trip, User, Truck, Route } from "@shared/schema";
 import { formatDistanceToNow, parseISO } from "date-fns";
+import { formatDistance, formatSpeed, formatDuration } from "@shared/utils/gpsCalculations";
+import { queryClient } from "@/lib/queryClient";
 
 const TRUCK_COLORS = [
   "#3b82f6", // blue
@@ -37,22 +40,9 @@ const DEFAULT_LOCATION: [number, number] = [40.7128, -74.0060]; // New York City
 export function LiveTracking() {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [gpsLocations, setGpsLocations] = useState<Map<string, GpsLocation>>(new Map());
-  const [tripMetrics, setTripMetrics] = useState<Map<string, { distance: number; speed: number; duration: number }>>(new Map());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Calculate distance between two GPS coordinates using Haversine formula
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in kilometers
-  };
-
-  const { data: trips = [] } = useQuery<Trip[]>({
+  const { data: trips = [], refetch: refetchTrips } = useQuery<Trip[]>({
     queryKey: ["/api/trips"],
   });
 
@@ -118,7 +108,6 @@ export function LiveTracking() {
           
           setGpsLocations((prev) => {
             const updated = new Map(prev);
-            const previousLocation = prev.get(message.tripId);
             const newLocation = {
               latitude: message.latitude,
               longitude: message.longitude,
@@ -127,32 +116,11 @@ export function LiveTracking() {
             updated.set(message.tripId, newLocation);
             
             console.log("🗺️ Updated GPS locations map:", Array.from(updated.entries()));
-
-            // Calculate distance if we have a previous location
-            if (previousLocation) {
-              const distanceTraveled = calculateDistance(
-                previousLocation.latitude,
-                previousLocation.longitude,
-                newLocation.latitude,
-                newLocation.longitude
-              );
-
-              // Update metrics if movement is significant (more than 10 meters)
-              if (distanceTraveled > 0.01) {
-                setTripMetrics((prevMetrics) => {
-                  const updatedMetrics = new Map(prevMetrics);
-                  const currentMetrics = updatedMetrics.get(message.tripId) || { distance: 0, speed: 0, duration: 0 };
-                  updatedMetrics.set(message.tripId, {
-                    ...currentMetrics,
-                    distance: currentMetrics.distance + distanceTraveled,
-                  });
-                  return updatedMetrics;
-                });
-              }
-            }
-
             return updated;
           });
+
+          // Refetch trips to get updated distance and speed from database
+          refetchTrips();
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -170,38 +138,27 @@ export function LiveTracking() {
     return () => {
       socket.close();
     };
-  }, []);
+  }, [refetchTrips]);
 
-  // Update duration and speed every second for all ongoing trips
-  useEffect(() => {
-    const interval = setInterval(() => {
-      trips.forEach((trip) => {
-        if (trip.status === "ongoing" && trip.startTime) {
-          const now = new Date();
-          const start = typeof trip.startTime === 'string' ? new Date(trip.startTime) : trip.startTime;
-          const elapsedSeconds = Math.floor((now.getTime() - start.getTime()) / 1000);
-          
-          setTripMetrics((prevMetrics) => {
-            const updatedMetrics = new Map(prevMetrics);
-            const currentMetrics = updatedMetrics.get(trip.id) || { distance: 0, speed: 0, duration: 0 };
-            
-            // Calculate average speed (km/h) = distance (km) / time (hours)
-            const elapsedHours = elapsedSeconds / 3600;
-            const avgSpeed = elapsedHours > 0 ? currentMetrics.distance / elapsedHours : 0;
-            
-            updatedMetrics.set(trip.id, {
-              ...currentMetrics,
-              duration: elapsedSeconds,
-              speed: avgSpeed,
-            });
-            return updatedMetrics;
-          });
-        }
-      });
-    }, 1000);
+  // Helper function to get elapsed duration
+  const getElapsedDuration = (startTime: Date | string | null): number => {
+    if (!startTime) return 0;
+    const start = typeof startTime === 'string' ? new Date(startTime) : startTime;
+    const now = new Date();
+    return Math.floor((now.getTime() - start.getTime()) / 1000);
+  };
 
-    return () => clearInterval(interval);
-  }, [trips]);
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["/api/trips"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/users/drivers"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] }),
+      queryClient.invalidateQueries({ queryKey: ["/api/routes"] }),
+    ]);
+    setIsRefreshing(false);
+  };
 
   const ongoingTrips = trips.filter((trip) => trip.status === "ongoing");
 
@@ -256,20 +213,31 @@ export function LiveTracking() {
   };
 
   const selectedTrip = ongoingTrips.find((trip) => trip.id === selectedTripId);
-  const selectedMetrics = selectedTripId ? tripMetrics.get(selectedTripId) : null;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Live Tracking</h1>
-        <p className="text-muted-foreground">
-          Track your fleet in real-time on the map. Click on a trip to view its location and metrics.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Live Tracking</h1>
+          <p className="text-muted-foreground">
+            Track your fleet in real-time on the map. Click on a trip to view its location and metrics.
+          </p>
+        </div>
+        <Button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          variant="outline"
+          size="default"
+          data-testid="button-refresh-tracking"
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       <MapView drivers={filteredLocations} />
 
-      {selectedTrip && selectedMetrics && (
+      {selectedTrip && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="gradient-card-purple hover-lift shadow-xl animate-scale-in overflow-hidden">
             <CardContent className="p-6">
@@ -282,7 +250,9 @@ export function LiveTracking() {
                 </div>
                 <div>
                   <p className="text-sm text-white/70 font-semibold uppercase tracking-wide">Distance</p>
-                  <p className="text-3xl font-bold mt-1 text-white">{selectedMetrics.distance.toFixed(1)} km</p>
+                  <p className="text-3xl font-bold mt-1 text-white">
+                    {formatDistance(parseFloat(selectedTrip.distanceTravelled?.toString() || "0"))}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -299,7 +269,9 @@ export function LiveTracking() {
                 </div>
                 <div>
                   <p className="text-sm text-white/70 font-semibold uppercase tracking-wide">Avg Speed</p>
-                  <p className="text-3xl font-bold mt-1 text-white">{selectedMetrics.speed.toFixed(0)} km/h</p>
+                  <p className="text-3xl font-bold mt-1 text-white">
+                    {formatSpeed(parseFloat(selectedTrip.avgSpeed?.toString() || "0"))}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -317,7 +289,7 @@ export function LiveTracking() {
                 <div>
                   <p className="text-sm text-white/70 font-semibold uppercase tracking-wide">Duration</p>
                   <p className="text-3xl font-bold mt-1 text-white">
-                    {Math.floor(selectedMetrics.duration / 60)}:{(selectedMetrics.duration % 60).toString().padStart(2, '0')}
+                    {formatDuration(getElapsedDuration(selectedTrip.startTime))}
                   </p>
                 </div>
               </div>
@@ -355,7 +327,9 @@ export function LiveTracking() {
                   const truckNumber = truck?.truckNumber || "Unknown";
                   const color = getColorForTruck(truckNumber);
                   const isSelected = selectedTripId === trip.id;
-                  const metrics = tripMetrics.get(trip.id);
+                  const distance = parseFloat(trip.distanceTravelled?.toString() || "0");
+                  const speed = parseFloat(trip.avgSpeed?.toString() || "0");
+                  const duration = getElapsedDuration(trip.startTime);
 
                   return (
                     <TableRow
@@ -379,9 +353,9 @@ export function LiveTracking() {
                       </TableCell>
                       <TableCell>{driver?.name || "Unknown"}</TableCell>
                       <TableCell>{route?.routeName || "Unknown Route"}</TableCell>
-                      <TableCell>{metrics ? metrics.speed.toFixed(0) : "0"} km/h</TableCell>
-                      <TableCell>{metrics ? metrics.distance.toFixed(1) : "0"} km</TableCell>
-                      <TableCell>{metrics ? `${Math.floor(metrics.duration / 60)}:${(metrics.duration % 60).toString().padStart(2, '0')}` : getDuration(trip.startTime)}</TableCell>
+                      <TableCell>{speed.toFixed(1)} km/h</TableCell>
+                      <TableCell>{distance.toFixed(2)} km</TableCell>
+                      <TableCell>{formatDuration(duration)}</TableCell>
                     </TableRow>
                   );
                 })}
