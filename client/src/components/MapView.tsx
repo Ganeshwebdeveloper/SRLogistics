@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Map as MapIcon, Satellite } from "lucide-react";
 import * as L from "leaflet";
 
 interface MapViewProps {
@@ -16,6 +18,9 @@ export function MapView({ drivers = [] }: MapViewProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersMapRef = useRef<Map<string, L.Marker>>(new Map());
+  const streetLayerRef = useRef<L.TileLayer | null>(null);
+  const satelliteLayerRef = useRef<L.TileLayer | null>(null);
+  const [mapView, setMapView] = useState<"street" | "satellite">("street");
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -23,9 +28,15 @@ export function MapView({ drivers = [] }: MapViewProps) {
     if (!mapRef.current) {
       const map = L.map(mapContainerRef.current).setView([40.7128, -74.0060], 12);
       
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      streetLayerRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '© OpenStreetMap contributors',
-      }).addTo(map);
+      });
+      
+      satelliteLayerRef.current = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      });
+
+      streetLayerRef.current.addTo(map);
 
       mapRef.current = map;
     }
@@ -105,6 +116,26 @@ export function MapView({ drivers = [] }: MapViewProps) {
   }, [drivers]);
 
   useEffect(() => {
+    if (!mapRef.current || !streetLayerRef.current || !satelliteLayerRef.current) return;
+
+    if (mapView === "street") {
+      if (mapRef.current.hasLayer(satelliteLayerRef.current)) {
+        mapRef.current.removeLayer(satelliteLayerRef.current);
+      }
+      if (!mapRef.current.hasLayer(streetLayerRef.current)) {
+        streetLayerRef.current.addTo(mapRef.current);
+      }
+    } else {
+      if (mapRef.current.hasLayer(streetLayerRef.current)) {
+        mapRef.current.removeLayer(streetLayerRef.current);
+      }
+      if (!mapRef.current.hasLayer(satelliteLayerRef.current)) {
+        satelliteLayerRef.current.addTo(mapRef.current);
+      }
+    }
+  }, [mapView]);
+
+  useEffect(() => {
     return () => {
       if (mapRef.current) {
         mapRef.current.remove();
@@ -113,10 +144,33 @@ export function MapView({ drivers = [] }: MapViewProps) {
     };
   }, []);
 
+  const toggleMapView = () => {
+    setMapView(prev => prev === "street" ? "satellite" : "street");
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>Live Tracking</CardTitle>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleMapView}
+          data-testid="button-toggle-map-view"
+          className="gap-2"
+        >
+          {mapView === "street" ? (
+            <>
+              <Satellite className="h-4 w-4" />
+              Satellite
+            </>
+          ) : (
+            <>
+              <MapIcon className="h-4 w-4" />
+              Street
+            </>
+          )}
+        </Button>
       </CardHeader>
       <CardContent>
         <div ref={mapContainerRef} className="h-96 rounded-md" data-testid="map-container" />
