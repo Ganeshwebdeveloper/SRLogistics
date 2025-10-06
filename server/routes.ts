@@ -767,6 +767,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/messages", requireAuth, async (req, res) => {
+    try {
+      const count = await storage.clearAllMessages();
+      res.json({ message: `${count} messages deleted successfully`, count });
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to clear messages" });
+    }
+  });
+
   // Crate Daily Balance endpoints
   app.get("/api/crates/daily", requireAuth, async (req, res) => {
     try {

@@ -91,6 +91,7 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   getAllMessages(): Promise<MessageWithSender[]>;
   deleteMessage(id: string): Promise<boolean>;
+  clearAllMessages(): Promise<number>;
   deleteOldImageMessages(hours: number): Promise<number>;
   deleteOldMessages(days: number): Promise<number>;
   
@@ -330,6 +331,11 @@ export class DbStorage implements IStorage {
   async deleteMessage(id: string): Promise<boolean> {
     const result = await db.delete(schema.messages).where(eq(schema.messages.id, id)).returning();
     return result.length > 0;
+  }
+
+  async clearAllMessages(): Promise<number> {
+    const result = await db.delete(schema.messages).returning();
+    return result.length;
   }
 
   // Crate Daily Balance operations

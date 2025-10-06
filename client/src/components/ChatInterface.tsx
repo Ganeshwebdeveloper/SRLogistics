@@ -1,12 +1,23 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Image as ImageIcon, X, Check, CheckCheck } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Send, Image as ImageIcon, X, Check, CheckCheck, RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { MessageWithSender } from "@shared/schema";
 import { format, isToday, isYesterday } from "date-fns";
 
@@ -23,11 +34,13 @@ export function ChatInterface({
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const { data: initialMessages, isLoading } = useQuery<MessageWithSender[]>({
+  const { data: initialMessages, isLoading, refetch } = useQuery<MessageWithSender[]>({
     queryKey: ["/api/messages"],
   });
 
@@ -80,6 +93,47 @@ export function ChatInterface({
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  const clearChatMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", "/api/messages", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      setMessages([]);
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      toast({
+        title: "Chat Cleared",
+        description: "All messages have been deleted successfully.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to clear chat",
+      });
+    },
+  });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+    toast({
+      title: "Messages Refreshed",
+      description: "Chat messages have been updated.",
+    });
+  };
+
+  const handleClearChat = () => {
+    setShowClearDialog(true);
+  };
+
+  const confirmClearChat = () => {
+    clearChatMutation.mutate();
+    setShowClearDialog(false);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -183,6 +237,24 @@ export function ChatInterface({
           <h3 className="font-semibold text-foreground">Group Chat</h3>
           <p className="text-xs text-muted-foreground">Fleet Communication</p>
         </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          data-testid="button-refresh-chat"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleClearChat}
+          disabled={clearChatMutation.isPending}
+          data-testid="button-clear-chat"
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
       </div>
 
       {/* Messages - WhatsApp style background pattern */}
@@ -390,6 +462,28 @@ export function ChatInterface({
           </Button>
         </div>
       </form>
+
+      {/* Clear Chat Confirmation Dialog */}
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Messages?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all chat messages. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-clear">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClearChat}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-clear"
+            >
+              Clear All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
