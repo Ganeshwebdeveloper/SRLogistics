@@ -58,7 +58,9 @@ const editTripSchema = z.object({
 export function TripsManagement() {
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"date" | "status" | "driver">("date");
+  const [driverFilter, setDriverFilter] = useState<string>("all");
+  const [vehicleFilter, setVehicleFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"date" | "status" | "driver" | "vehicle">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [editTripDialogOpen, setEditTripDialogOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -112,7 +114,13 @@ export function TripsManagement() {
     const statusMatch =
       statusFilter === "all" || trip.status === statusFilter;
 
-    return monthMatch && statusMatch;
+    const driverMatch =
+      driverFilter === "all" || trip.driverId === driverFilter;
+
+    const vehicleMatch =
+      vehicleFilter === "all" || trip.truckId === vehicleFilter;
+
+    return monthMatch && statusMatch && driverMatch && vehicleMatch;
   });
 
   // Sort trips
@@ -129,6 +137,10 @@ export function TripsManagement() {
       const driverA = drivers.find((d) => d.id === a.driverId)?.name || "";
       const driverB = drivers.find((d) => d.id === b.driverId)?.name || "";
       comparison = driverA.localeCompare(driverB);
+    } else if (sortBy === "vehicle") {
+      const vehicleA = trucks.find((t) => t.id === a.truckId)?.truckNumber || "";
+      const vehicleB = trucks.find((t) => t.id === b.truckId)?.truckNumber || "";
+      comparison = vehicleA.localeCompare(vehicleB);
     }
 
     return sortOrder === "asc" ? comparison : -comparison;
@@ -401,7 +413,7 @@ export function TripsManagement() {
           <CardTitle className="text-white">Filters & Sorting</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="space-y-2">
               <Label htmlFor="month-filter" className="text-white/90">Month</Label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -435,6 +447,40 @@ export function TripsManagement() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="driver-filter" className="text-white/90">Driver</Label>
+              <Select value={driverFilter} onValueChange={setDriverFilter}>
+                <SelectTrigger id="driver-filter" data-testid="select-driver-filter">
+                  <SelectValue placeholder="All Drivers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Drivers</SelectItem>
+                  {drivers.map((driver) => (
+                    <SelectItem key={driver.id} value={driver.id}>
+                      {driver.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vehicle-filter" className="text-white/90">Vehicle</Label>
+              <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
+                <SelectTrigger id="vehicle-filter" data-testid="select-vehicle-filter">
+                  <SelectValue placeholder="All Vehicles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vehicles</SelectItem>
+                  {trucks.map((truck) => (
+                    <SelectItem key={truck.id} value={truck.id}>
+                      {truck.truckNumber}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="sort-by" className="text-white/90">Sort By</Label>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
                 <SelectTrigger id="sort-by" data-testid="select-sort-by">
@@ -444,6 +490,7 @@ export function TripsManagement() {
                   <SelectItem value="date">Date</SelectItem>
                   <SelectItem value="status">Status</SelectItem>
                   <SelectItem value="driver">Driver</SelectItem>
+                  <SelectItem value="vehicle">Vehicle</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -469,6 +516,8 @@ export function TripsManagement() {
               onClick={() => {
                 setSelectedMonth("all");
                 setStatusFilter("all");
+                setDriverFilter("all");
+                setVehicleFilter("all");
                 setSortBy("date");
                 setSortOrder("desc");
               }}
